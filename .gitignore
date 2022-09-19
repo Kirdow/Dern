@@ -1,0 +1,8 @@
+# Build files and folders
+obj*/
+*.d
+*.o
+
+# Binary files
+dist/dernapp
+
