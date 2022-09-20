@@ -42,6 +42,12 @@ namespace Dern
             }
 
             Scope<TokenData> data = tokenizer->GetTokenData();
+            std::cout << "Tokens: " << data->Count() << "\n";
+            for (int index = 0; index < data->Count(); index++)
+            {
+                std::cout << index << ": " << *data->At(index) << "\n";
+            }
+            return;
 
             Registry reg;
             int index = 0;
