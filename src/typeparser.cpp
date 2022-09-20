@@ -39,6 +39,57 @@ namespace Dern
     {
         std::vector<Ref<ParseToken>> tmp;
 
+        // ( )
+        while (true)
+        {
+            tmp = v;
+            
+            for (size_t i = 0; i < v.size(); i++)
+            {
+                auto token = v.at(i);
+                if (!token->IsType(PTokenType::Sym) || token->Cast<SymToken>()->Value != "(")
+                    continue;
+
+                int mem = 0;
+                int result = -1;
+                for (size_t j = i + 1; j < v.size(); j++)
+                {
+                    token = v.at(j);
+                    if (token->IsType(PTokenType::Sym))
+                    {
+                        if (token->Cast<SymToken>()->Value == "(")
+                        {
+                            ++mem;
+                        }
+                        else if (token->Cast<SymToken>()->Value == ")")
+                        {
+                            if (mem <= 0)
+                            {
+                                result = static_cast<int>(j);
+                                break;
+                            }
+
+                            --mem;
+                        }
+                    }
+                }
+
+                if (result < 0)
+                    throw "Expected ')'";
+
+                std::vector<Ref<ParseToken>> partVec(v.begin() + i + 1, v.begin() + result);
+
+                auto recursiveResult = ComputeValue(partVec);
+                v.erase(v.begin() + i, v.begin() + result);
+                v[i] = recursiveResult;
+
+                break;
+            }
+
+            if (v.size() == tmp.size())
+                break;
+        }
+
         // * /
         while (true)
         {
