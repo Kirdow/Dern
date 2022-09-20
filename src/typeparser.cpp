@@ -19,6 +19,11 @@ namespace Dern
                 int numData = std::stoi(data);
                 tokens.push_back(CreateRef<NumberToken>(numData));
             }
+            else if (token->IsType(TokenType::Name))
+            {
+                std::string varName = token->GetData();
+                tokens.push_back(CreateRef<VarToken>(varName));
+            }
             else
                 throw "Not implemented!";
         }
@@ -33,6 +38,26 @@ namespace Dern
         }
 
         return CreateRef<StoredValue>();
+    }
+
+    static bool ValidMDASToken(const Ref<ParseToken>& token)
+    {
+        return token->IsType(PTokenType::Int) || token->IsType(PTokenType::Var);
+    }
+
+    static int GetMDASValue(const Ref<ParseToken>& token, const Registry& reg)
+    {
+        if (token->IsType(PTokenType::Int)) return token->Cast<NumberToken>()->Value;
+        else if (token->IsType(PTokenType::Var))
+        {
+            auto name = token->Cast<VarToken>()->Value;
+            if (!reg.HasEntry<int>(name))
+                throw "Unexpected variable name";
+
+            return reg.GetEntry<int>(name);
+        }
+
+        throw "Unexpected MDAS token type";
     }
 
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
@@ -107,11 +132,11 @@ namespace Dern
                     auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
 
-                    if (!left->IsType(PTokenType::Int) || !right->IsType(PTokenType::Int))
+                    if (!ValidMDASToken(left) || !ValidMDASToken(right))
                         throw "Unexpected token type for MD";
                     
-                    auto leftInt = left->Cast<NumberToken>()->Value;
-                    auto rightInt = right->Cast<NumberToken>()->Value;
+                    auto leftInt = GetMDASValue(left, m_Reg);
+                    auto rightInt = GetMDASValue(right, m_Reg);
 
                     int result = 0;
                     if (sym == "*") result = leftInt * rightInt;
@@ -146,11 +171,11 @@ namespace Dern
                     auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
 
-                    if (!left->IsType(PTokenType::Int) || !right->IsType(PTokenType::Int))
+                    if (!ValidMDASToken(left) || !ValidMDASToken(right))
                         throw "Unexpected token type for AS";
                     
-                    auto leftInt = left->Cast<NumberToken>()->Value;
-                    auto rightInt = right->Cast<NumberToken>()->Value;
+                    auto leftInt = GetMDASValue(left, m_Reg);
+                    auto rightInt = GetMDASValue(right, m_Reg);
 
                     int result = 0;
                     if (sym == "+") result = leftInt + rightInt;

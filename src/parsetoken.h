@@ -2,11 +2,13 @@
 
 #include <string>
 
+#include "defaultvalue.h"
+
 namespace Dern
 {
     enum class PTokenType
     {
-        Int, Text, Sym
+        Int, Text, Sym, Var
     };
 
     struct ParseToken
@@ -15,9 +17,16 @@ namespace Dern
 
         ParseToken(PTokenType type) : Type(type) {}
 
+        bool IsType(PTokenType type) const { return Type == type; }
         template<typename T>
         const T* Cast() const { return static_cast<const T*>(this); }
-        bool IsType(PTokenType type) const { return Type == type; }
+    };
+
+    struct VarToken : public ParseToken
+    {
+        std::string Value;
+
+        VarToken(const std::string& val) : ParseToken(PTokenType::Var), Value(val) {}
     };
 
     struct SymToken : public ParseToken
