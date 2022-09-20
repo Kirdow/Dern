@@ -62,6 +62,19 @@ namespace Dern
 
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
     {
+        if (v.size() == 1)
+        {
+            auto token = v[0];
+            if (ValidMDASToken(token))
+            {
+                int result = GetMDASValue(token, m_Reg);
+
+                return CreateRef<NumberToken>(result);
+            }
+
+            throw "Invalid MDAS token";
+        }
+
         std::vector<Ref<ParseToken>> tmp;
 
         // ( )

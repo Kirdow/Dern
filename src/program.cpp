@@ -5,7 +5,7 @@
 #include "typeparser.h"
 
 //#define ENABLE_DEBUG_READ
-#define ENABLE_DEBUG_RESULT
+//#define ENABLE_DEBUG_RESULT
 
 #ifdef ENABLE_DEBUG_READ
     #define DEBUG_READ(token) std::cout << "Read[" << index << "]: " << *(token) << "\n"
@@ -121,6 +121,70 @@ namespace Dern
                     }
 
                     continue;
+                }
+                else if (tokens[0]->IsValue("print"))
+                {
+                    tokens[1] = data->At(++index);
+                    DEBUG_READ(tokens[1]);
+                    if (!tokens[1]->IsType(TokenType::Sym) || !tokens[1]->IsValue("("))
+                    {
+                        std::cerr << "Unexpected '" << tokens[1]->GetData() << "', expected '('\n";
+                        return;
+                    }
+
+                    ++index;
+                    TypeParser parser(reg, 1);
+                    auto result = parser.ComputeValue([&](ParseMem& mem)
+                    {
+                        Ref<Token> token = data->At(index++);
+                        DEBUG_READ(token);
+                        if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                        {
+                            ++mem[0];
+                        }
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
+                        {
+                            if (mem[0] <= 0) return Ref<Token>();
+                            --mem[0];
+                        }
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(";"))
+                        {
+                            throw "Unexpected ';'";
+                        }
+                        return token;
+                    });
+
+                    if (result->HasData())
+                    {
+                        if (result->IsOfType<int>())
+                        {
+                            auto data = result->GetData<int>();
+                            DEBUG_RESULT(data, "int");
+                            std::cout << data << "\n";
+                        }
+                        else if (result->IsOfType<std::string>())
+                        {
+                            auto data = result->GetData<std::string>();
+                            DEBUG_RESULT(data, "string");
+                            std::cout << data << "\n";
+                        }
+                        else
+                        {
+                            std::cout << "\n";
+                        }
+                    }
+                    else
+                    {
+                        DEBUG_RESULT("", "None");
+                        std::cout << "\n";
+                    }
+
+                    tokens[2] = data->At(index++);
+                    if (!tokens[2]->IsType(TokenType::Sym) || !tokens[2]->IsValue(";"))
+                    {
+                        std::cerr << "Unexpected '" << tokens[2]->GetData() << "', expected ';'\n";
+                        return;
+                    }
                 }
                 else
                 {
