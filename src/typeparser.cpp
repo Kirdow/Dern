@@ -3,12 +3,12 @@
 
 namespace Dern
 {
-    Ref<StoredValue> TypeParser::ComputeValue(std::function<Ref<Token>()> nextFn)
+    Ref<StoredValue> TypeParser::ComputeValue(std::function<Ref<Token>(ParseMem&)> nextFn)
     {
         std::vector<Token> tokens;
 
         Ref<Token> token = nullptr;
-        while ((token = nextFn()) != nullptr)
+        while ((token = nextFn(m_Mem)) != nullptr)
         {
             tokens.push_back(*token);
         }
