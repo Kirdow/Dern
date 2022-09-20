@@ -6,6 +6,7 @@
 #include "storedvalue.h"
 #include "registry.h"
 #include "token.h"
+#include "parsetoken.h"
 
 namespace Dern
 {
@@ -42,6 +43,8 @@ namespace Dern
     public:
         int Count() const { return m_Count; }
         Ref<StoredValue> ComputeValue(std::function<Ref<Token>(ParseMem&)> nextFn);
+    private:
+        Ref<ParseToken> ComputeValue(std::vector<Ref<ParseToken>> v);
     private:
         int m_Count;
         Registry& m_Reg;

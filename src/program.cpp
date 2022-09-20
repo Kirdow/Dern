@@ -83,16 +83,16 @@ namespace Dern
                     {
                         Ref<Token> token = data->At(index++);
                         DEBUG_READ(token);
-                        if (*token == TokenType::Sym && *token == "(")
+                        if (token->IsType(TokenType::Sym) && token->IsValue("("))
                         {
                             ++mem[0];
                         }
-                        else if (*token == TokenType::Sym && *token == ")")
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
                         {
                             if (mem[0] <= 0) return Ref<Token>();
                             --mem[0];
                         }
-                        else if (*token == TokenType::Sym && *token == ";")
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(";"))
                         {
                             if (mem[0] <= 0) return Ref<Token>();
                             throw "Unexpected ';'";

@@ -1,9 +1,4 @@
 var a = 5;
 var b = 7;
-var c = a + b;
-var d = a + b * c;
-var e = (a + b) * c;
+var c = 6 + 4 * 3 / 2 + 9;
 print(c);
-print(d);
-print(e);
-

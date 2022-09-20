@@ -37,26 +37,6 @@ namespace Dern
     };
 }
 
-inline bool operator==(const Dern::Token& token, Dern::TokenType type)
-{
-    return token.GetType() == type;
-}
-
-inline bool operator==(Dern::TokenType type, const Dern::Token& token)
-{
-    return token.GetType() == type;
-}
-
-inline bool operator==(const Dern::Token& token, const std::string& text)
-{
-    return token.GetData() == text;
-}
-
-inline bool operator==(const std::string& text, const Dern::Token& token)
-{
-    return token.GetData() == text;
-}
-
 inline std::ostream& operator<<(std::ostream& ostr, const Dern::Token& token)
 {
     ostr << "T" << TokenTypeToString(token.GetType()) << "[" << token.GetData() << "]";
