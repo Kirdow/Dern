@@ -28,6 +28,9 @@ namespace Dern
 
         TokenType GetType() const { return m_Type; }
         const std::string& GetData() const { return m_Data; }
+
+        bool IsType(TokenType type) const { return m_Type == type; }
+        bool IsValue(const std::string& value) const { return m_Data == value; }
     private:
         TokenType m_Type;
         std::string m_Data;

@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "program.h"
-#include "registry.h"
 
 int main(int argc, char** argv)
 {

@@ -5,9 +5,9 @@
 namespace Dern::Defaults
 {
     template<typename T>
-    T GetDefault() { }
+    inline T GetDefault() { }
     template<>
-    int GetDefault<int>() { return 0; }
+    inline int GetDefault<int>() { return 0; }
     template<>
-    std::string GetDefault<std::string>() { return std::string(); }
+    inline std::string GetDefault<std::string>() { return std::string(); }
 }

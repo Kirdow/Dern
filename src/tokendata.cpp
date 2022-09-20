@@ -6,7 +6,7 @@ namespace Dern
     TokenData::TokenData(const std::vector<Token>& data)
     {
         m_Count = data.size();
-        m_Data = new Scope<Token>[m_Count];
+        m_Data = new Ref<Token>[m_Count];
         for (int i = 0; i < m_Count; i++)
         {
             auto& token = data[i];

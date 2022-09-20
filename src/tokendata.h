@@ -12,10 +12,10 @@ namespace Dern
         ~TokenData();
 
         int Count() const { return m_Count; }
-        const Scope<Token>& operator[](int index) const { return m_Data[index]; }
-        const Scope<Token>& At(int index) const { return m_Data[index]; }
+        const Ref<Token>& operator[](int index) const { return m_Data[index]; }
+        const Ref<Token>& At(int index) const { return m_Data[index]; }
     private:
         int m_Count;
-        Scope<Token>* m_Data;
+        Ref<Token>* m_Data;
     };
 }
