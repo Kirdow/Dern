@@ -13,10 +13,9 @@ namespace Dern
         {
             if (token->IsType(TokenType::Sym))
                 tokens.push_back(CreateRef<SymToken>(token->GetData()));
-            else if (token->IsType(TokenType::Value))
+            else if (token->IsType(TokenType::Int))
             {
-                std::string data = token->GetData();
-                int numData = std::stoi(data);
+                int numData = token->GetDataInt();
                 tokens.push_back(CreateRef<NumberToken>(numData));
             }
             else if (token->IsType(TokenType::Name))

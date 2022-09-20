@@ -4,7 +4,7 @@ namespace Dern
 {
     enum class TokenType
     {
-        Keyword, Name, Value, Sym
+        Keyword, Name, Sym, Int, Text
     };
 
     inline const char* TokenTypeToString(TokenType type)
@@ -13,8 +13,9 @@ namespace Dern
         {
         case TokenType::Keyword: return "Keyword";
         case TokenType::Name: return "Name";
-        case TokenType::Value: return "Value";
         case TokenType::Sym: return "Sym";
+        case TokenType::Int: return "Int";
+        case TokenType::Text: return "Text";
         }
 
         return "Undefined";
@@ -31,6 +32,8 @@ namespace Dern
 
         bool IsType(TokenType type) const { return m_Type == type; }
         bool IsValue(const std::string& value) const { return m_Data == value; }
+
+        int GetDataInt() const;
     private:
         TokenType m_Type;
         std::string m_Data;

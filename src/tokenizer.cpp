@@ -89,7 +89,7 @@ namespace Dern
             }
             else if (EqualsRegex(numRegex, str))
             {
-                m_Tokens.emplace_back(TokenType::Value, str);
+                m_Tokens.emplace_back(TokenType::Int, str);
             }
             else if (EqualsRegex(symRegex, str))
             {
@@ -115,7 +115,7 @@ namespace Dern
                             }
                             else if (rex == "num")
                             {
-                                m_Tokens.emplace_back(TokenType::Value, mstr);
+                                m_Tokens.emplace_back(TokenType::Int, mstr);
                             }
                             else if (rex == "sym")
                             {
