@@ -1,6 +1,4 @@
-var hello = "World";
-print(hello);
-var world = "Hello";
-print(world);
-hello <=> world;
-print(hello + ", " + world + "!");
+var age = 24;
+if (age >= 18) {
+    print("You can drive cars!");
+}

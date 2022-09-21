@@ -6,6 +6,13 @@
 
 namespace Dern
 {
+    struct TokenizerData
+    {
+        std::unordered_set<std::string> comparisonSet;
+    };
+
+    static TokenizerData* s_Data = nullptr;
+
     struct NamedRegex
     {
         std::regex Regex;
@@ -37,7 +44,7 @@ namespace Dern
 
     Tokenizer::Tokenizer(const Scope<Code>& code)
         : m_Code(code) {}
-
+    
     Tokenizer::~Tokenizer() {}
 
     static bool EqualsRegex(NamedRegex& rex, const std::string& str)
@@ -149,11 +156,32 @@ namespace Dern
             "!=", "==", "=>", "<=", ">=", "<<", ">>",
             "++", "--", "+=", "-=", "*=", "/=", "%=",
             // Single
-            "=", ";", "+", "-", "*", "/", "(", ")", "[", "]", "{", "}"
+            "=", ";", "+", "-", "*", "/", "(", ")", "[", "]", "{", "}",
+            "<", ">", "!"
         });
+
+        if (s_Data == nullptr)
+        {
+            s_Data = new TokenizerData();
+
+            std::unordered_set<std::string> comparisonSyms
+            {
+                "<=", "<", ">=", ">", "!=", "=="
+            };
+
+            s_Data->comparisonSet.merge(comparisonSyms);
+        }
+
         NamedRegex strRegex("\"((\\\\.|.)*)\"", "str");
 
-
+        std::unordered_set<std::string> keywordSet({
+            "print", "write",
+            "var",
+            "func",
+            "if", "unless", "else", "elif", "elun",
+            "for", "while", "until",
+            "incl"
+        });
 
         NamedRegex allRegex[4] = {
             wordRegex, numRegex, symRegex, strRegex
@@ -166,7 +194,7 @@ namespace Dern
         {
             if (EqualsRegex(wordRegex, str))
             {
-                if (str == "var" || str == "print") m_Tokens.emplace_back(TokenType::Keyword, str);
+                if (keywordSet.find(str) != keywordSet.end()) m_Tokens.emplace_back(TokenType::Keyword, str);
                 else m_Tokens.emplace_back(TokenType::Name, str);
             }
             else if (EqualsRegex(numRegex, str))
@@ -198,7 +226,7 @@ namespace Dern
 
                             if (rex == "word")
                             {
-                                if (mstr == "var" || mstr == "print") m_Tokens.emplace_back(TokenType::Keyword, mstr);
+                                if (keywordSet.find(mstr) != keywordSet.end()) m_Tokens.emplace_back(TokenType::Keyword, mstr);
                                 else m_Tokens.emplace_back(TokenType::Name, mstr);
                             }
                             else if (rex == "num")
@@ -236,5 +264,12 @@ namespace Dern
         }
 
         return true;
+    }
+
+    bool Tokenizer::IsComparisonToken(const Ref<Token>& token)
+    {
+        if (!token->IsType(TokenType::Sym)) return false;
+
+        return s_Data->comparisonSet.find(token->GetData()) != s_Data->comparisonSet.end();
     }
 }

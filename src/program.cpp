@@ -30,6 +30,19 @@ namespace Dern
     {
     }
 
+    template<typename T>
+    static bool ComparisonOperator(const T& left, const T& right, const std::string& op)
+    {
+        if (op == "==") return left == right;
+        else if (op == "!=") return left != right;
+        else if (op == "<") return left < right;
+        else if (op == ">") return left > right;
+        else if (op == "<=") return left <= right;
+        else if (op == ">=") return left >= right;
+        
+        return false;
+    }
+
     void LProgram::Run()
     {
         try
@@ -183,6 +196,152 @@ namespace Dern
                             return;
                         }
                     }
+                    else if (tokens[0]->IsValue("if"))
+                    {
+                        tokens[1] = data->At(++index);
+                        DEBUG_READ(tokens[1]);
+                        if (!tokens[1]->IsType(TokenType::Sym) || !tokens[1]->IsValue("("))
+                        {
+                            std::cerr << "Unexpected '" << tokens[1]->GetData() << "', expected '('\n";
+                            return;
+                        }
+
+                        ++index;
+                        TypeParser leftParser(reg, 1);
+                        auto leftResult = leftParser.ComputeValue([&](ParseMem& mem)
+                        {
+                            Ref<Token> token = data->At(index++);
+                            DEBUG_READ(token);
+                            if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                            {
+                                ++mem[0];
+                            }
+                            else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
+                            {
+                                if (mem[0] <= 0) throw "Unexpected ')'";
+                                --mem[0];
+                            }
+                            else if (Tokenizer::IsComparisonToken(token))
+                            {
+                                if (mem[0] <= 0) return Ref<Token>();
+                            }
+
+                            return token;
+                        });
+
+                        tokens[2] = data->At(index - 1);
+                        DEBUG_READ(tokens[2]);
+                        if (!Tokenizer::IsComparisonToken(tokens[2]))
+                        {
+                            std::cout << "Unexpected token '" << *tokens[2] << "'!\n";
+                            return;
+                        }
+
+                        std::string op = tokens[2]->GetData();
+
+                        TypeParser rightParser(reg, 1);
+                        auto rightResult = rightParser.ComputeValue([&](ParseMem& mem)
+                        {
+                            Ref<Token> token = data->At(index++);
+                            DEBUG_READ(token);
+                            if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                            {
+                                ++mem[0];
+                            }
+                            else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
+                            {
+                                if (mem[0] <= 0) return Ref<Token>();
+                                --mem[0];
+                            }
+                            else if (token->IsType(TokenType::Sym) && token->IsValue(";"))
+                            {
+                                throw "Unexpected ';'";
+                            }
+                            return token;
+                        });
+
+                        if (!leftResult->HasData() || !rightResult->HasData())
+                        {
+                            std::cerr << "Unexpected, comparison expression expected!\n";
+                            return;
+                        }
+
+                        bool isTrue = false;
+                        if (leftResult->IsOfType<int>())
+                        {
+                            if (!rightResult->IsOfType<int>())
+                            {
+                                std::cerr << "Unexpected comparison type mismatch, expected right int!\n";
+                                return;
+                            }
+
+                            int leftInt = leftResult->GetData<int>();
+                            int rightInt = rightResult->GetData<int>();
+
+                            isTrue = ComparisonOperator<int>(leftInt, rightInt, op);
+                        }
+                        else if (leftResult->IsOfType<std::string>())
+                        {
+                            if (!rightResult->IsOfType<std::string>())
+                            {
+                                std::cerr << "Unexpected comparison type mismatch, expected right text!\n";
+                                return;
+                            }
+
+                            std::string leftStr = leftResult->GetData<std::string>();
+                            std::string rightStr = rightResult->GetData<std::string>();
+
+                            isTrue = ComparisonOperator<std::string>(leftStr, rightStr, op);
+                        }
+                        else
+                        {
+                            std::cerr << "Unexpected comparison type, expected left int or text!\n";
+                            return;
+                        }
+
+                        if (isTrue)
+                        {
+                            tokens[3] = data->At(index++);
+                            DEBUG_READ(tokens[3]);
+                            if (!tokens[3]->IsType(TokenType::Sym) || !tokens[3]->IsValue("{"))
+                            {
+                                std::cerr << "Unexpected '" << tokens[3]->GetData() << "'. Expected '{'!\n";
+                                return;
+                            }
+
+                            // TODO: Add Stack Shift
+
+                            continue;
+                        }
+                        else
+                        {
+                            tokens[3] = data->At(index++);
+                            DEBUG_READ(tokens[3]);
+                            if (!tokens[3]->IsType(TokenType::Sym) || !tokens[3]->IsValue("{"))
+                            {
+                                std::cerr << "Unexpected '" << tokens[3]->GetData() << "'. Expected '{'!\n";
+                                return;
+                            }
+
+                            int curl = 0;
+                            do {
+                                auto token = data->At(index++);
+                                if (token->IsType(TokenType::Sym) && token->IsValue("{"))
+                                {
+                                    ++curl;
+                                }
+                                else if (token->IsType(TokenType::Sym) && token->IsValue("}"))
+                                {
+                                    if (curl <= 0) break;
+                                    --curl;
+                                }
+                            } while (true);
+
+                            continue;
+                        }
+                        
+                        
+                    }
                     else
                     {
                         std::cerr << "Unexpected keyword '" << tokens[0]->GetData() << "'!\n";
@@ -319,6 +478,19 @@ namespace Dern
                     {
                         std::cerr << "Unexpected sym token '" << *tokens[1] << "'!\n";
                         return;
+                    }
+                }
+                else if (tokens[0]->IsType(TokenType::Sym))
+                {
+                    if (tokens[0]->IsValue("}"))
+                    {
+                        // TODO: pop stack
+                        ++index;
+                        continue;
+                    }
+                    else
+                    {
+                        std::cerr << "Unexpected token '" << *tokens[0] << "'!\n";
                     }
                 }
                 else

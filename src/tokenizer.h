@@ -14,6 +14,8 @@ namespace Dern
         bool Tokenize();
 
         Scope<TokenData> GetTokenData() const { return CreateScope<TokenData>(m_Tokens); }
+
+        static bool IsComparisonToken(const Ref<Token>& token);
     private:
         const Scope<Code>& m_Code;
         std::vector<Token> m_Tokens;
