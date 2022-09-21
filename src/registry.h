@@ -15,6 +15,17 @@ namespace Dern
         Registry() {}
         ~Registry() {}
 
+        bool HasAnyEntry(const std::string& name) const
+        {
+            if (m_Entries.find(name) == m_Entries.end())
+                return false;
+
+            const auto& entry = m_Entries.at(name);
+            if (!entry->HasName(name)) return false;
+
+            return entry->HasData();
+        }
+
         template<typename T>
         bool HasEntry(const std::string& name) const
         {

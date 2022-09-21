@@ -1,3 +1,6 @@
-print(5 + 7 + "!");
-print("" + 5 + 7 + "!");
-print("" + (5 + 7) + "!");
+var hello = "World";
+print(hello);
+var world = "Hello";
+print(world);
+hello <=> world;
+print(hello + ", " + world + "!");
