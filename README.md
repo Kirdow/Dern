@@ -24,6 +24,6 @@ This project primarily depend on these:
 
 ### **Software/Tools**
 - [<img src="https://code.visualstudio.com/assets/images/code-stable.png" alt="Code" width="16" height="16"> Visual Studio Code](https://code.visualstudio.com/ "Visual Studio Code Website") as primary editor/IDE
-- [<img src="https://www.gnu.org/graphics/heckert_gnu.transp.small.png" alt="GNU" width="16" height="16" style="filter: invert(100%)"> G++](https://gcc.gnu.org/ "GNU GCC Website") as compiler/linker
-- [<img src="https://www.gnu.org/graphics/heckert_gnu.transp.small.png" alt="GNU" width="16" height="16" style="filter: invert(100%)"> Make](https://www.gnu.org/software/make/ "GNU Make Website") as build script
+- [<picture><source media="(prefers-color-scheme: dark)" srcset="./images/heckert-dark.png"><img src="./images/heckert-light.png" alt="GNU" width="16" height="16"></picture> G++](https://gcc.gnu.org/ "GNU GCC Website") as compiler/linker
+- [<picture><source media="(prefers-color-scheme: dark)" srcset="./images/heckert-dark.png"><img src="./images/heckert-light.png" alt="GNU" width="16" height="16"></picture> Make](https://www.gnu.org/software/make/ "GNU Make Website") as build script
 - [<img src="https://en.cppreference.com/favicon.ico" alt="C++" width="16" height="16"> C++17](https://en.cppreference.com/w/cpp/17 "C++17 @ cppreference.com")
