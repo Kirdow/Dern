@@ -23,17 +23,30 @@ namespace Dern
                 std::string varName = token->GetData();
                 tokens.push_back(CreateRef<VarToken>(varName));
             }
-            else
-                throw "Not implemented!";
+            else if (token->IsType(TokenType::Text))
+            {
+                std::string strData = token->GetData();
+                tokens.push_back(CreateRef<TextToken>(strData));
+            }
         }
 
         auto result = ComputeValue(tokens);
-        if (result && result->IsType(PTokenType::Int))
+        if (result)
         {
-            int data = result->Cast<NumberToken>()->Value;
-            auto ref = CreateRef<StoredValue>();
-            ref->SetData<int>(data);
-            return ref;
+            if (result->IsType(PTokenType::Int))
+            {
+                int data = result->Cast<NumberToken>()->Value;
+                auto ref = CreateRef<StoredValue>();
+                ref->SetData<int>(data);
+                return ref;
+            }
+            else if (result->IsType(PTokenType::Text))
+            {
+                std::string data = result->Cast<TextToken>()->Value;
+                auto ref = CreateRef<StoredValue>();
+                ref->SetData<std::string>(data);
+                return ref;
+            }
         }
 
         return CreateRef<StoredValue>();
@@ -61,17 +74,43 @@ namespace Dern
 
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
     {
+        if (v.size() == 0)
+            return CreateRef<ParseToken>(PTokenType::None);
+
         if (v.size() == 1)
         {
             auto token = v[0];
-            if (ValidMDASToken(token))
+
+            if (token->IsType(PTokenType::Int))
             {
-                int result = GetMDASValue(token, m_Reg);
+                int result = token->Cast<NumberToken>()->Value;
 
                 return CreateRef<NumberToken>(result);
             }
+            else if (token->IsType(PTokenType::Text))
+            {
+                std::string result = token->Cast<TextToken>()->Value;
 
-            throw "Invalid MDAS token";
+                return CreateRef<TextToken>(result);
+            }
+            else if (token->IsType(PTokenType::Var))
+            {
+                auto name = token->Cast<VarToken>()->Value;
+                if (m_Reg.HasEntry<int>(name))
+                {
+                    int result = m_Reg.GetEntry<int>(name);
+
+                    return CreateRef<NumberToken>(result);
+                }
+                else if (m_Reg.HasEntry<std::string>(name))
+                {
+                    std::string result = m_Reg.GetEntry<std::string>(name);
+
+                    return CreateRef<TextToken>(result);
+                }
+            }
+            
+            return CreateRef<ParseToken>(PTokenType::None);
         }
 
         std::vector<Ref<ParseToken>> tmp;
@@ -182,6 +221,80 @@ namespace Dern
                 {
                     auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
+
+                    bool leftValidForText = (left->IsType(PTokenType::Text) || (left->IsType(PTokenType::Var) && m_Reg.HasEntry<std::string>(left->Cast<VarToken>()->Value)));
+                    bool rightValidForText = (right->IsType(PTokenType::Text) || (right->IsType(PTokenType::Var) && m_Reg.HasEntry<std::string>(right->Cast<VarToken>()->Value)));
+                    if (leftValidForText || rightValidForText)
+                    {
+                        std::stringstream sstr;
+                        if (left->IsType(PTokenType::Text))
+                        {
+                            auto leftStr = left->Cast<TextToken>()->Value;
+                            sstr << leftStr;
+                        }
+                        else if (left->IsType(PTokenType::Int))
+                        {
+                            auto leftInt = left->Cast<NumberToken>()->Value;
+                            sstr << leftInt;
+                        }
+                        else if (left->IsType(PTokenType::Var))
+                        {
+                            auto name = left->Cast<VarToken>()->Value;
+                            if (m_Reg.HasEntry<int>(name))
+                            {
+                                auto leftInt = m_Reg.GetEntry<int>(name);
+
+                                sstr << leftInt;
+                            }
+                            else if (m_Reg.HasEntry<std::string>(name))
+                            {
+                                auto leftStr = m_Reg.GetEntry<std::string>(name);
+
+                                sstr << leftStr;
+                            }
+                            else
+                                throw "Invalid text variable";
+                        }
+                        else
+                            throw "Unexpected token";
+
+                        if (right->IsType(PTokenType::Text))
+                        {
+                            auto rightStr = right->Cast<TextToken>()->Value;
+                            sstr << rightStr;
+                        }
+                        else if (right->IsType(PTokenType::Int))
+                        {
+                            auto rightInt = right->Cast<NumberToken>()->Value;
+                            sstr << rightInt;
+                        }
+                        else if (right->IsType(PTokenType::Var))
+                        {
+                            auto name = right->Cast<VarToken>()->Value;
+                            if (m_Reg.HasEntry<int>(name))
+                            {
+                                auto rightInt = m_Reg.GetEntry<int>(name);
+
+                                sstr << rightInt;
+                            }
+                            else if (m_Reg.HasEntry<std::string>(name))
+                            {
+                                auto rightStr = m_Reg.GetEntry<std::string>(name);
+
+                                sstr << rightStr;
+                            }
+                            else
+                                throw "Invalid text variable";
+                        }
+                        else
+                            throw "Unexpected text token";
+
+                        auto ref = CreateRef<TextToken>(sstr.str());
+                        v[i] = ref;
+                        v.erase(v.begin() + i + 1);
+                        v.erase(v.begin() + i - 1);
+                        break;
+                    }
 
                     if (!ValidMDASToken(left) || !ValidMDASToken(right))
                         throw "Unexpected token type for AS";

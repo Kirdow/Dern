@@ -8,7 +8,7 @@ namespace Dern
 {
     enum class PTokenType
     {
-        Int, Text, Sym, Var
+        Int, Text, Sym, Var, None
     };
 
     struct ParseToken
@@ -49,4 +49,30 @@ namespace Dern
 
         TextToken(const std::string& val) : ParseToken(PTokenType::Text), Value(val) {}
     };
+}
+
+inline std::ostream& operator<<(std::ostream& ostr, const Dern::ParseToken& token)
+{
+    if (token.IsType(Dern::PTokenType::Int))
+    {
+        ostr << "PInt[" << token.Cast<Dern::NumberToken>()->Value << "]";
+    }
+    else if (token.IsType(Dern::PTokenType::Text))
+    {
+        ostr << "PText[" << token.Cast<Dern::TextToken>()->Value << "]";
+    }
+    else if (token.IsType(Dern::PTokenType::Var))
+    {
+        ostr << "PVar[" << token.Cast<Dern::VarToken>()->Value << "]";
+    }
+    else if (token.IsType(Dern::PTokenType::Sym))
+    {
+        ostr << "PSym[" << token.Cast<Dern::SymToken>()->Value << "]";
+    }
+    else if (token.IsType(Dern::PTokenType::None))
+    {
+        ostr << "PNone";
+    }
+
+    return ostr;
 }

@@ -139,8 +139,8 @@ namespace Dern
 
     bool Tokenizer::Tokenize()
     {
-        NamedRegex wordRegex("[a-z][a-z0-9]*", "word");
-        NamedRegex numRegex("[0-9]+", "num");
+        NamedRegex wordRegex("[a-z][a-zA-Z0-9]*", "word");
+        NamedRegex numRegex("\\-?[0-9]+", "num");
         NamedRegex symRegex = CreateRegex("sym",
         {
             // Triple
