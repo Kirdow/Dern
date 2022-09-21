@@ -226,6 +226,9 @@ namespace Dern
                     bool rightValidForText = (right->IsType(PTokenType::Text) || (right->IsType(PTokenType::Var) && m_Reg.HasEntry<std::string>(right->Cast<VarToken>()->Value)));
                     if (leftValidForText || rightValidForText)
                     {
+                        if (sym != "+")
+                            throw "Unexpected symbol, expected '+'";
+
                         std::stringstream sstr;
                         if (left->IsType(PTokenType::Text))
                         {
