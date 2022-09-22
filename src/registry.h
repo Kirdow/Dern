@@ -55,7 +55,7 @@ namespace Dern
         {
             if (m_Entries.find(name) == m_Entries.end())
             {
-                m_Entries[name] = CreateRef<StoredValue>(name);
+                m_Entries[name] = Ref<StoredValue>::Create(name);
             }
 
             const auto& entry = m_Entries.at(name);

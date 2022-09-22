@@ -458,7 +458,7 @@ namespace Dern
 
                         if (undefinedCheck > 0) return;
 
-                        Ref<StoredValue> tmp = CreateRef<StoredValue>();
+                        Ref<StoredValue> tmp = Ref<StoredValue>::Create();
                         if (reg.HasEntry<int>(varName))
                         {
                             tmp->SetData<int>(reg.GetEntry<int>(varName));

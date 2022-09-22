@@ -12,21 +12,21 @@ namespace Dern
         while ((token = nextFn(m_Mem)) != nullptr)
         {
             if (token->IsType(TokenType::Sym))
-                tokens.push_back(CreateRef<SymToken>(token->GetData()));
+                tokens.push_back(Ref<SymToken>::Create(token->GetData()));
             else if (token->IsType(TokenType::Int))
             {
                 int numData = token->GetDataInt();
-                tokens.push_back(CreateRef<NumberToken>(numData));
+                tokens.push_back(Ref<NumberToken>::Create(numData));
             }
             else if (token->IsType(TokenType::Name))
             {
                 std::string varName = token->GetData();
-                tokens.push_back(CreateRef<VarToken>(varName));
+                tokens.push_back(Ref<VarToken>::Create(varName));
             }
             else if (token->IsType(TokenType::Text))
             {
                 std::string strData = token->GetData();
-                tokens.push_back(CreateRef<TextToken>(strData));
+                tokens.push_back(Ref<TextToken>::Create(strData));
             }
         }
 
@@ -36,20 +36,20 @@ namespace Dern
             if (result->IsType(PTokenType::Int))
             {
                 int data = result->Cast<NumberToken>()->Value;
-                auto ref = CreateRef<StoredValue>();
+                auto ref = Ref<StoredValue>::Create();
                 ref->SetData<int>(data);
                 return ref;
             }
             else if (result->IsType(PTokenType::Text))
             {
                 std::string data = result->Cast<TextToken>()->Value;
-                auto ref = CreateRef<StoredValue>();
+                auto ref = Ref<StoredValue>::Create();
                 ref->SetData<std::string>(data);
                 return ref;
             }
         }
 
-        return CreateRef<StoredValue>();
+        return Ref<StoredValue>::Create();
     }
 
     static bool ValidMDASToken(const Ref<ParseToken>& token)
@@ -75,7 +75,7 @@ namespace Dern
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
     {
         if (v.size() == 0)
-            return CreateRef<ParseToken>(PTokenType::None);
+            return Ref<ParseToken>::Create(PTokenType::None);
 
         if (v.size() == 1)
         {
@@ -85,13 +85,13 @@ namespace Dern
             {
                 int result = token->Cast<NumberToken>()->Value;
 
-                return CreateRef<NumberToken>(result);
+                return Ref<NumberToken>::Create(result);
             }
             else if (token->IsType(PTokenType::Text))
             {
                 std::string result = token->Cast<TextToken>()->Value;
 
-                return CreateRef<TextToken>(result);
+                return Ref<TextToken>::Create(result);
             }
             else if (token->IsType(PTokenType::Var))
             {
@@ -100,17 +100,17 @@ namespace Dern
                 {
                     int result = m_Reg.GetEntry<int>(name);
 
-                    return CreateRef<NumberToken>(result);
+                    return Ref<NumberToken>::Create(result);
                 }
                 else if (m_Reg.HasEntry<std::string>(name))
                 {
                     std::string result = m_Reg.GetEntry<std::string>(name);
 
-                    return CreateRef<TextToken>(result);
+                    return Ref<TextToken>::Create(result);
                 }
             }
             
-            return CreateRef<ParseToken>(PTokenType::None);
+            return Ref<ParseToken>::Create(PTokenType::None);
         }
 
         std::vector<Ref<ParseToken>> tmp;
@@ -193,7 +193,7 @@ namespace Dern
                     if (sym == "*") result = leftInt * rightInt;
                     else result = leftInt / rightInt;
 
-                    auto ref = CreateRef<NumberToken>(result);
+                    auto ref = Ref<NumberToken>::Create(result);
                     v[i] = ref;
                     v.erase(v.begin() + i + 1);
                     v.erase(v.begin() + i - 1);
@@ -292,7 +292,7 @@ namespace Dern
                         else
                             throw "Unexpected text token";
 
-                        auto ref = CreateRef<TextToken>(sstr.str());
+                        auto ref = Ref<TextToken>::Create(sstr.str());
                         v[i] = ref;
                         v.erase(v.begin() + i + 1);
                         v.erase(v.begin() + i - 1);
@@ -309,7 +309,7 @@ namespace Dern
                     if (sym == "+") result = leftInt + rightInt;
                     else result = leftInt - rightInt;
 
-                    auto ref = CreateRef<NumberToken>(result);
+                    auto ref = Ref<NumberToken>::Create(result);
                     v[i] = ref;
                     v.erase(v.begin() + i + 1);
                     v.erase(v.begin() + i - 1);

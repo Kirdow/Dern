@@ -15,7 +15,7 @@ namespace Dern
         for (int i = 0; i < m_Count; i++)
         {
             auto& token = data[i];
-            m_Data[i].reset(new Token(token.GetType(), token.GetData()));
+            m_Data[i] = Ref<Token>::Create(token.GetType(), token.GetData());
         }
     }
 
