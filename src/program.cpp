@@ -58,7 +58,7 @@ namespace Dern
 
             Registry reg;
             int index = 0;
-            Ref<Token> tokens[5];
+            Ref<Token> tokens[32];
             while (index < data->Count())
             {
                 tokens[0] = data->At(index);
@@ -337,6 +337,21 @@ namespace Dern
                                 }
                             } while (true);
 
+                            tokens[4] = data->At(index);
+                            if (!tokens[4]->IsType(TokenType::Keyword) || !tokens[4]->IsValue("else"))
+                                continue;
+
+                            // Found else
+
+                            tokens[5] = data->At(++index);
+                            if (!tokens[5]->IsType(TokenType::Sym) || !tokens[5]->IsValue("{"))
+                            {
+                                std::cerr << "Unexpected '" << tokens[5]->GetData() << "', Expected '{'!\n";
+                                return;
+                            }
+
+                            ++index;
+
                             continue;
                         }
                         
@@ -484,8 +499,36 @@ namespace Dern
                 {
                     if (tokens[0]->IsValue("}"))
                     {
+                        // Poll EOF
+                        data->PollEOF(index + 1);
+
                         // TODO: pop stack
+                        tokens[1] = data->At(++index);
+                        if (!tokens[1]->IsType(TokenType::Keyword) || !tokens[1]->IsValue("else"))
+                            continue;
+
+                        tokens[2] = data->At(++index);
+                        if (!tokens[2]->IsType(TokenType::Sym) || !tokens[2]->IsValue("{"))
+                        {
+                            std::cerr << "Unexpected '" << tokens[2]->GetData() << "', expected '{'!\n";
+                            return;
+                        }
+
                         ++index;
+                        int curl = 0;
+                        do {
+                            auto token = data->At(index++);
+                            if (token->IsType(TokenType::Sym) && token->IsValue("{"))
+                            {
+                                ++curl;
+                            }
+                            else if (token->IsType(TokenType::Sym) && token->IsValue("}"))
+                            {
+                                if (curl <= 0) break;
+                                --curl;
+                            }
+                        } while (true);
+
                         continue;
                     }
                     else
@@ -503,6 +546,13 @@ namespace Dern
         catch (const char* message)
         {
             std::cerr << "Error: " << message << "\n";
+        }
+        catch (const TokenDataEOF& eof)
+        {
+            if (eof.IsGood())
+                return;
+
+            std::cerr << "EOF Error: " << eof.GetIndex() << " >= " << eof.GetCount() << "!\n";
         }
     }
 }

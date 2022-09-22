@@ -1,4 +1,8 @@
-var age = 24;
+var age = 16;
+print("You are " + age + " years old!");
 if (age >= 18) {
     print("You can drive cars!");
+} else {
+    print("You still need " + (18 - age) + " more years!");
 }
+print("Thanks for coming by");

@@ -3,6 +3,11 @@
 
 namespace Dern
 {
+    TokenDataEOF TokenDataEOF::CreateGood()
+    {
+        return TokenDataEOF(-1, -1);
+    }
+
     TokenData::TokenData(const std::vector<Token>& data)
     {
         m_Count = data.size();
@@ -18,5 +23,10 @@ namespace Dern
     {
         m_Count = 0;
         delete[] m_Data;
+    }
+
+    void TokenData::PollEOF(int index) const
+    {
+        if (index == m_Count) throw TokenDataEOF::CreateGood();
     }
 }
