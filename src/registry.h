@@ -30,7 +30,12 @@ namespace Dern
         bool HasEntry(const std::string& name) const
         {
             if (m_Entries.find(name) == m_Entries.end())
+            {
+                if (m_Parent != nullptr)
+                    return m_Parent->HasEntry<T>(name);
+
                 return false;
+            }
 
             const auto& entry = m_Entries.at(name);
             if (!entry->HasName(name)) return false;
@@ -42,7 +47,12 @@ namespace Dern
         T GetEntry(const std::string& name) const
         {
             if (m_Entries.find(name) == m_Entries.end())
+            {
+                if (m_Parent != nullptr)
+                    return m_Parent->GetEntry<T>(name);
+
                 return Defaults::GetDefault<T>();
+            }
 
             const auto& entry = m_Entries.at(name);
             if (!entry->HasName(name)) return Defaults::GetDefault<T>();
@@ -51,12 +61,27 @@ namespace Dern
         }
 
         template<typename T>
-        void SetEntry(const std::string& name, const T& data)
+        void SetEntry(const std::string& name, const T& data, bool definition = true)
         {
-            if (m_Entries.find(name) == m_Entries.end())
+            if (!definition)
             {
-                m_Entries[name] = Ref<StoredValue>::Create(name);
+                if (m_Entries.find(name) == m_Entries.end())
+                {
+                    if (m_Parent == nullptr)
+                        throw "Undefined variable referenced";
+
+                    m_Parent->SetEntry<T>(name, data, definition);
+                    return;
+                }
+
+                const auto& entry = m_Entries.at(name);
+                if (!entry->HasName(name)) return;
+                entry->SetData<T>(data);
+                return;
             }
+
+            if (m_Entries.find(name) == m_Entries.end())
+                m_Entries[name] = Ref<StoredValue>::Create(name);
 
             const auto& entry = m_Entries.at(name);
             if (!entry->HasName(name)) return;

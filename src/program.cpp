@@ -409,13 +409,13 @@ namespace Dern
                             {
                                 auto data = result->GetData<int>();
                                 DEBUG_RESULT(data, "int");
-                                m_Registry->SetEntry<int>(varName, data);
+                                m_Registry->SetEntry<int>(varName, data, false);
                             }
                             else if (result->IsOfType<std::string>())
                             {
                                 auto data = result->GetData<std::string>();
                                 DEBUG_RESULT(data, "string");
-                                m_Registry->SetEntry<std::string>(varName, data);
+                                m_Registry->SetEntry<std::string>(varName, data, false);
                             }
                         }
                         else

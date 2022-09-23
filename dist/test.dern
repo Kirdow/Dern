@@ -1,10 +1,19 @@
+print("Redefine Test");
 var a = 5;
 if (a == 5) {
+    print(a);
     var a = 7;
     print(a);
-} else {
-    var a = 12;
+}
+print(a);
+
+print();
+
+print("Reassign Test");
+if (a == 5)
+{
+    print(a);
+    a = 12;
     print(a);
 }
-
 print(a);
