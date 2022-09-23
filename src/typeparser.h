@@ -37,7 +37,7 @@ namespace Dern
     class TypeParser
     {
     public:
-        TypeParser(Registry& reg, int n)
+        TypeParser(const Ref<Registry>& reg, int n)
             : m_Count(n), m_Reg(reg), m_Mem(n) {}
 
     public:
@@ -47,7 +47,7 @@ namespace Dern
         Ref<ParseToken> ComputeValue(std::vector<Ref<ParseToken>> v);
     private:
         int m_Count;
-        Registry& m_Reg;
+        Ref<Registry> m_Reg;
         ParseMem m_Mem;
     };
 }

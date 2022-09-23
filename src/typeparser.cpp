@@ -57,16 +57,16 @@ namespace Dern
         return token->IsType(PTokenType::Int) || token->IsType(PTokenType::Var);
     }
 
-    static int GetMDASValue(const Ref<ParseToken>& token, const Registry& reg)
+    static int GetMDASValue(const Ref<ParseToken>& token, const Ref<Registry>& reg)
     {
         if (token->IsType(PTokenType::Int)) return token->Cast<NumberToken>()->Value;
         else if (token->IsType(PTokenType::Var))
         {
             auto name = token->Cast<VarToken>()->Value;
-            if (!reg.HasEntry<int>(name))
+            if (!reg->HasEntry<int>(name))
                 throw "Unexpected variable name";
 
-            return reg.GetEntry<int>(name);
+            return reg->GetEntry<int>(name);
         }
 
         throw "Unexpected MDAS token type";
@@ -96,15 +96,15 @@ namespace Dern
             else if (token->IsType(PTokenType::Var))
             {
                 auto name = token->Cast<VarToken>()->Value;
-                if (m_Reg.HasEntry<int>(name))
+                if (m_Reg->HasEntry<int>(name))
                 {
-                    int result = m_Reg.GetEntry<int>(name);
+                    int result = m_Reg->GetEntry<int>(name);
 
                     return Ref<NumberToken>::Create(result);
                 }
-                else if (m_Reg.HasEntry<std::string>(name))
+                else if (m_Reg->HasEntry<std::string>(name))
                 {
-                    std::string result = m_Reg.GetEntry<std::string>(name);
+                    std::string result = m_Reg->GetEntry<std::string>(name);
 
                     return Ref<TextToken>::Create(result);
                 }
@@ -222,8 +222,8 @@ namespace Dern
                     auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
 
-                    bool leftValidForText = (left->IsType(PTokenType::Text) || (left->IsType(PTokenType::Var) && m_Reg.HasEntry<std::string>(left->Cast<VarToken>()->Value)));
-                    bool rightValidForText = (right->IsType(PTokenType::Text) || (right->IsType(PTokenType::Var) && m_Reg.HasEntry<std::string>(right->Cast<VarToken>()->Value)));
+                    bool leftValidForText = (left->IsType(PTokenType::Text) || (left->IsType(PTokenType::Var) && m_Reg->HasEntry<std::string>(left->Cast<VarToken>()->Value)));
+                    bool rightValidForText = (right->IsType(PTokenType::Text) || (right->IsType(PTokenType::Var) && m_Reg->HasEntry<std::string>(right->Cast<VarToken>()->Value)));
                     if (leftValidForText || rightValidForText)
                     {
                         if (sym != "+")
@@ -243,15 +243,15 @@ namespace Dern
                         else if (left->IsType(PTokenType::Var))
                         {
                             auto name = left->Cast<VarToken>()->Value;
-                            if (m_Reg.HasEntry<int>(name))
+                            if (m_Reg->HasEntry<int>(name))
                             {
-                                auto leftInt = m_Reg.GetEntry<int>(name);
+                                auto leftInt = m_Reg->GetEntry<int>(name);
 
                                 sstr << leftInt;
                             }
-                            else if (m_Reg.HasEntry<std::string>(name))
+                            else if (m_Reg->HasEntry<std::string>(name))
                             {
-                                auto leftStr = m_Reg.GetEntry<std::string>(name);
+                                auto leftStr = m_Reg->GetEntry<std::string>(name);
 
                                 sstr << leftStr;
                             }
@@ -274,15 +274,15 @@ namespace Dern
                         else if (right->IsType(PTokenType::Var))
                         {
                             auto name = right->Cast<VarToken>()->Value;
-                            if (m_Reg.HasEntry<int>(name))
+                            if (m_Reg->HasEntry<int>(name))
                             {
-                                auto rightInt = m_Reg.GetEntry<int>(name);
+                                auto rightInt = m_Reg->GetEntry<int>(name);
 
                                 sstr << rightInt;
                             }
-                            else if (m_Reg.HasEntry<std::string>(name))
+                            else if (m_Reg->HasEntry<std::string>(name))
                             {
-                                auto rightStr = m_Reg.GetEntry<std::string>(name);
+                                auto rightStr = m_Reg->GetEntry<std::string>(name);
 
                                 sstr << rightStr;
                             }

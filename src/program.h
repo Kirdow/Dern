@@ -4,6 +4,7 @@
 
 namespace Dern
 {
+	class Registry;
 	class LProgram
 	{
 	public:
@@ -13,5 +14,6 @@ namespace Dern
 		void Run();
 	private:
 		Scope<Code> m_Code;
+		Ref<Registry> m_Registry;
 	};
 }

@@ -56,7 +56,7 @@ namespace Dern
 
             Scope<TokenData> data = tokenizer->GetTokenData();
 
-            Registry reg;
+            m_Registry = Registry::Create();
             int index = 0;
             Ref<Token> tokens[32];
             while (index < data->Count())
@@ -88,7 +88,7 @@ namespace Dern
                         }
 
                         ++index;
-                        TypeParser parser(reg, 1);
+                        TypeParser parser(m_Registry, 1);
                         auto result = parser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = data->At(index++);
@@ -116,13 +116,13 @@ namespace Dern
                             {
                                 auto data = result->GetData<int>();
                                 DEBUG_RESULT(data, "int");
-                                reg.SetEntry<int>(varName, data);
+                                m_Registry->SetEntry<int>(varName, data);
                             }
                             else if (result->IsOfType<std::string>())
                             {
                                 auto data = result->GetData<std::string>();
                                 DEBUG_RESULT(data, "string");
-                                reg.SetEntry<std::string>(varName, data);
+                                m_Registry->SetEntry<std::string>(varName, data);
                             }
                         }
                         else
@@ -143,7 +143,7 @@ namespace Dern
                         }
 
                         ++index;
-                        TypeParser parser(reg, 1);
+                        TypeParser parser(m_Registry, 1);
                         auto result = parser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = data->At(index++);
@@ -207,7 +207,7 @@ namespace Dern
                         }
 
                         ++index;
-                        TypeParser leftParser(reg, 1);
+                        TypeParser leftParser(m_Registry, 1);
                         auto leftResult = leftParser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = data->At(index++);
@@ -239,7 +239,7 @@ namespace Dern
 
                         std::string op = tokens[2]->GetData();
 
-                        TypeParser rightParser(reg, 1);
+                        TypeParser rightParser(m_Registry, 1);
                         auto rightResult = rightParser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = data->At(index++);
@@ -309,7 +309,7 @@ namespace Dern
                                 return;
                             }
 
-                            // TODO: Add Stack Shift
+                            m_Registry = Registry::Create(m_Registry);
 
                             continue;
                         }
@@ -352,6 +352,8 @@ namespace Dern
 
                             ++index;
 
+                            m_Registry = Registry::Create(m_Registry);
+
                             continue;
                         }
                         
@@ -379,7 +381,7 @@ namespace Dern
                     if (tokens[1]->IsValue("="))
                     {
                         ++index;
-                        TypeParser parser(reg, 1);
+                        TypeParser parser(m_Registry, 1);
                         auto result = parser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = data->At(index++);
@@ -407,13 +409,13 @@ namespace Dern
                             {
                                 auto data = result->GetData<int>();
                                 DEBUG_RESULT(data, "int");
-                                reg.SetEntry<int>(varName, data);
+                                m_Registry->SetEntry<int>(varName, data);
                             }
                             else if (result->IsOfType<std::string>())
                             {
                                 auto data = result->GetData<std::string>();
                                 DEBUG_RESULT(data, "string");
-                                reg.SetEntry<std::string>(varName, data);
+                                m_Registry->SetEntry<std::string>(varName, data);
                             }
                         }
                         else
@@ -444,13 +446,13 @@ namespace Dern
                         }
 
                         int undefinedCheck = 0;
-                        if (!reg.HasAnyEntry(varName))
+                        if (!m_Registry->HasAnyEntry(varName))
                         {
                             undefinedCheck++;
                             std::cerr << "Variable '" << varName << "' is undefined!\n";
                         }
 
-                        if (!reg.HasAnyEntry(varNameRight))
+                        if (!m_Registry->HasAnyEntry(varNameRight))
                         {
                             undefinedCheck++;
                             std::cerr << "Variable '" << varNameRight << "' is undefined!\n";
@@ -459,31 +461,31 @@ namespace Dern
                         if (undefinedCheck > 0) return;
 
                         Ref<StoredValue> tmp = Ref<StoredValue>::Create();
-                        if (reg.HasEntry<int>(varName))
+                        if (m_Registry->HasEntry<int>(varName))
                         {
-                            tmp->SetData<int>(reg.GetEntry<int>(varName));
+                            tmp->SetData<int>(m_Registry->GetEntry<int>(varName));
                         }
-                        else if (reg.HasEntry<std::string>(varName))
+                        else if (m_Registry->HasEntry<std::string>(varName))
                         {
-                            tmp->SetData<std::string>(reg.GetEntry<std::string>(varName));
+                            tmp->SetData<std::string>(m_Registry->GetEntry<std::string>(varName));
                         }
 
-                        if (reg.HasEntry<int>(varNameRight))
+                        if (m_Registry->HasEntry<int>(varNameRight))
                         {
-                            reg.SetEntry<int>(varName, reg.GetEntry<int>(varNameRight));
+                            m_Registry->SetEntry<int>(varName, m_Registry->GetEntry<int>(varNameRight));
                         }
-                        else if (reg.HasEntry<std::string>(varNameRight))
+                        else if (m_Registry->HasEntry<std::string>(varNameRight))
                         {
-                            reg.SetEntry<std::string>(varName, reg.GetEntry<std::string>(varNameRight));
+                            m_Registry->SetEntry<std::string>(varName, m_Registry->GetEntry<std::string>(varNameRight));
                         }
 
                         if (tmp->IsOfType<int>())
                         {
-                            reg.SetEntry<int>(varNameRight, tmp->GetData<int>());
+                            m_Registry->SetEntry<int>(varNameRight, tmp->GetData<int>());
                         }
                         else if (tmp->IsOfType<std::string>())
                         {
-                            reg.SetEntry<std::string>(varNameRight, tmp->GetData<std::string>());
+                            m_Registry->SetEntry<std::string>(varNameRight, tmp->GetData<std::string>());
                         }
 
                         ++index;
@@ -502,7 +504,12 @@ namespace Dern
                         // Poll EOF
                         data->PollEOF(index + 1);
 
-                        // TODO: pop stack
+                        auto parent = m_Registry->GetParent();
+                        if (parent)
+                        {
+                            m_Registry = parent;
+                        }
+
                         tokens[1] = data->At(++index);
                         if (!tokens[1]->IsType(TokenType::Keyword) || !tokens[1]->IsValue("else"))
                             continue;

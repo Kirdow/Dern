@@ -1,8 +1,10 @@
-var age = 16;
-print("You are " + age + " years old!");
-if (age >= 18) {
-    print("You can drive cars!");
+var a = 5;
+if (a == 5) {
+    var a = 7;
+    print(a);
 } else {
-    print("You still need " + (18 - age) + " more years!");
+    var a = 12;
+    print(a);
 }
-print("Thanks for coming by");
+
+print(a);
