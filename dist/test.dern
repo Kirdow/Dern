@@ -1,6 +1,7 @@
-func printTwice($text: str) -> $void {
-    print(str);
-    print(str);
+func concatPrint($text: first, $text: second) -> $void {
+    print(first + second);
 }
 
-printTwice("Hello, Func!");
+var first = "Hello, ";
+var second = "World!";
+concatPrint(first, second);
