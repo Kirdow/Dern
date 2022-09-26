@@ -100,7 +100,7 @@ namespace Dern
         void SetParent(const Ref<Registry>& parent) { m_Parent = parent; }
         Ref<Registry> GetParent() const { return m_Parent; }
     public:
-        static Ref<Registry> Create(Ref<Registry> parent = nullptr) { return Ref<Registry>::Create(parent); }
+        static Ref<Registry> Create(const Ref<Registry>& parent = nullptr) { return Ref<Registry>::Create(parent); }
     private:
         Ref<Registry> m_Parent;
         std::unordered_map<std::string, Ref<StoredValue>> m_Entries;

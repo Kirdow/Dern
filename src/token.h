@@ -4,7 +4,7 @@ namespace Dern
 {
     enum class TokenType
     {
-        Keyword, Name, Sym, Int, Text
+        Keyword, Name, Sym, Int, Text, Type
     };
 
     inline const char* TokenTypeToString(TokenType type)
@@ -16,6 +16,7 @@ namespace Dern
         case TokenType::Sym: return "Sym";
         case TokenType::Int: return "Int";
         case TokenType::Text: return "Text";
+        case TokenType::Type: return "Type";
         }
 
         return "Undefined";

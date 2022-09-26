@@ -51,6 +51,8 @@ namespace Dern
         {
             Release();
         }
+
+        std::string ToString() const;
     private:
         void Release()
         {

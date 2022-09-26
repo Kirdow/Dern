@@ -155,9 +155,10 @@ namespace Dern
             // Double
             "!=", "==", "=>", "<=", ">=", "<<", ">>",
             "++", "--", "+=", "-=", "*=", "/=", "%=",
+            "::", "->",
             // Single
             "=", ";", "+", "-", "*", "/", "(", ")", "[", "]", "{", "}",
-            "<", ">", "!"
+            "<", ">", "!", ":"
         });
 
         if (s_Data == nullptr)
@@ -174,6 +175,8 @@ namespace Dern
 
         NamedRegex strRegex("\"((\\\\.|.)*)\"", "str");
 
+        NamedRegex typeRegex("\\$[a-z]+", "type");
+
         std::unordered_set<std::string> keywordSet({
             "print", "write",
             "var",
@@ -183,8 +186,8 @@ namespace Dern
             "incl"
         });
 
-        NamedRegex allRegex[4] = {
-            wordRegex, numRegex, symRegex, strRegex
+        NamedRegex allRegex[5] = {
+            wordRegex, numRegex, symRegex, strRegex, typeRegex
         };
 
         std::vector<std::string> words;
@@ -210,6 +213,11 @@ namespace Dern
                 auto literal = str.substr(1, str.length() - 2);
                 FixStringLiteral(literal);
                 m_Tokens.emplace_back(TokenType::Text, literal);
+            }
+            else if (EqualsRegex(typeRegex, str))
+            {
+                auto type = str.substr(1);
+                m_Tokens.emplace_back(TokenType::Type, type);
             }
             else
             {
@@ -242,6 +250,11 @@ namespace Dern
                                 auto literal = mstr.substr(1, mstr.length() - 2);
                                 FixStringLiteral(literal);
                                 m_Tokens.emplace_back(TokenType::Text, literal);
+                            }
+                            else if (rex == "type")
+                            {
+                                auto type = mstr.substr(1);
+                                m_Tokens.emplace_back(TokenType::Type, type);
                             }
                             else
                             {

@@ -1,19 +1,6 @@
-print("Redefine Test");
-var a = 5;
-if (a == 5) {
-    print(a);
-    var a = 7;
-    print(a);
+func printTwice($text: str) -> $void {
+    print(str);
+    print(str);
 }
-print(a);
 
-print();
-
-print("Reassign Test");
-if (a == 5)
-{
-    print(a);
-    a = 12;
-    print(a);
-}
-print(a);
+printTwice("Hello, Func!");
