@@ -7,34 +7,15 @@
 #include "paramdef.h"
 #include "valuehelper.h"
 #include "stackframe.h"
-
-//#define ENABLE_DEBUG_READ
-//#define ENABLE_DEBUG_RESULT
-//#define ENABLE_CALL_LOG
-
-#ifdef ENABLE_DEBUG_READ
-    #define DEBUG_READ(token) std::cout << "Read[" << m_InstructionIndex << "]: " << *(token) << "\n"
-#else
-    #define DEBUG_READ(token)
-#endif
-
-#ifdef ENABLE_DEBUG_RESULT
-    #define DEBUG_RESULT(data, type) std::cout << "Result[" << m_InstructionIndex << "]: " << type << "(" << data << ")\n";
-#else
-    #define DEBUG_RESULT(data, type)
-#endif
-
-#ifdef ENABLE_CALL_LOG
-    #define CALL_LOG(stream) std::cout << "Call Log: " << stream << "\n";
-#else
-    #define CALL_LOG(stream)
-#endif
+#include "system.h"
 
 namespace Dern
 {
 	LProgram::LProgram(const std::string& filePath)
     {
+        m_Debug = CreateScope<Debug>((void*)this);
         m_Code = CreateScope<Code>(filePath);
+        m_System = Ref<LSystem>::Create(this);
     }
 
     LProgram::~LProgram()
@@ -71,6 +52,11 @@ namespace Dern
         return tokenizer->GetTokenData();
     }
 
+    const Ref<LSystem>& LProgram::GetSystem() const
+    {
+        return m_System;
+    }
+
     void LProgram::Run()
     {
         try
@@ -78,7 +64,7 @@ namespace Dern
             m_Data = LoadTokenData(m_Code);
             if (!m_Data) return;
 
-            m_Registry = Registry::Create();
+            m_System->SetRegistry(Registry::Create());
             m_InstructionIndex = 0;
 
             RunImpl();
@@ -127,7 +113,7 @@ namespace Dern
                     }
 
                     GetIndex(ECount::Pre);
-                    TypeParser parser(m_Registry, 1);
+                    TypeParser parser = m_System->CreateParser(1);
                     auto result = parser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
@@ -155,13 +141,13 @@ namespace Dern
                         {
                             auto data = result->GetData<int>();
                             DEBUG_RESULT(data, "int");
-                            m_Registry->SetEntry<int>(varName, data);
+                            m_System->GetRegistry()->SetEntry<int>(varName, data);
                         }
                         else if (result->IsOfType<std::string>())
                         {
                             auto data = result->GetData<std::string>();
                             DEBUG_RESULT(data, "string");
-                            m_Registry->SetEntry<std::string>(varName, data);
+                            m_System->GetRegistry()->SetEntry<std::string>(varName, data);
                         }
                     }
                     else
@@ -182,7 +168,7 @@ namespace Dern
                     }
 
                     GetIndex(ECount::Pre);
-                    TypeParser parser(m_Registry, 1);
+                    TypeParser parser = m_System->CreateParser(1);
                     auto result = parser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
@@ -247,7 +233,7 @@ namespace Dern
                     }
 
                     GetIndex(ECount::Pre);
-                    TypeParser leftParser(m_Registry, 1);
+                    TypeParser leftParser = m_System->CreateParser(1);
                     auto leftResult = leftParser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
@@ -279,7 +265,7 @@ namespace Dern
 
                     std::string op = m_TokenStack[2]->GetData();
 
-                    TypeParser rightParser(m_Registry, 1);
+                    TypeParser rightParser = m_System->CreateParser(1);
                     auto rightResult = rightParser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
@@ -349,9 +335,9 @@ namespace Dern
                             return RNULL();
                         }
 
-                        m_Registry = Registry::Create(m_Registry);
-                        auto frame = Ref<ScopeStackFrame>::Create(m_Registry);
-                        m_FrameStack.push_back(frame);
+                        m_System->SetRegistry(Registry::Create(m_System->GetRegistry()));
+                        auto frame = Ref<ScopeStackFrame>::Create(m_System->GetRegistry());
+                        m_System->AddStackFrame(frame);
 
                         continue;
                     }
@@ -397,9 +383,9 @@ namespace Dern
 
                         GetIndex(ECount::Pre);
 
-                        m_Registry = Registry::Create(m_Registry);
-                        auto frame = Ref<ScopeStackFrame>::Create(m_Registry);
-                        m_FrameStack.push_back(frame);
+                        m_System->SetRegistry(Registry::Create(m_System->GetRegistry()));
+                        auto frame = Ref<ScopeStackFrame>::Create(m_System->GetRegistry());
+                        m_System->AddStackFrame(frame);
 
                         continue;
                     }
@@ -525,14 +511,71 @@ namespace Dern
                     int endPos = GetIndex() - 1;
 
                     auto funcDef = Ref<FuncDef>::Create(funcName, returnType, params, startPos, endPos);
-                    if (m_FuncMap.find(funcName) != m_FuncMap.end())
+                    if (m_System->HasFuncDef(funcName))
                     {
                         std::cerr << "Unexpected func redefinition '" << funcName << "'!\n";
                         return RNULL();
                     }
 
-                    m_FuncMap[funcName] = funcDef;
+                    m_System->AddFuncDef(funcName, funcDef);
                     continue;
+                }
+                else if (m_TokenStack[0]->IsValue("return"))
+                {
+                    m_TokenStack[1] = GetToken(ECount::Pre);
+                    if (m_TokenStack[1]->IsType(TokenType::Sym) && m_TokenStack[1]->IsValue(";"))
+                    {
+                        Ref<StackFrame> frame = nullptr;
+                        while (m_System->FrameStackSize() > 0 && !frame && (frame = m_System->PopStackFrame())->GetType() != StackFrameType::Call)
+                            frame = nullptr;
+
+                        if (!frame || frame->GetType() != StackFrameType::Call)
+                        {
+                            throw "Unexpected error. Not in a function!\n";
+                        }
+
+                        auto funcCall = frame.Cast<CallStackFrame>()->GetFuncCall();
+                        m_InstructionIndex = funcCall->GetReturnIndex();
+                        m_System->SetRegistry(funcCall->GetParentRegistry());
+                        return RNULL();
+                    }
+
+                    TypeParser parser = m_System->CreateParser(1);
+                    auto result = parser.ComputeValue([&](ParseMem& mem)
+                    {
+                        Ref<Token> token = GetToken(ECount::Post);
+                        DEBUG_READ(token);
+                        if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                        {
+                            ++mem[0];
+                        }
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
+                        {
+                            if (mem[0] <= 0) return Ref<Token>();
+                            --mem[0];
+                        }
+                        else if (token->IsType(TokenType::Sym) && token->IsValue(";"))
+                        {
+                            if (mem[0] <= 0) return Ref<Token>();
+                            throw "Unexpected ';'";
+                        }
+                        return token;
+                    });
+
+                    Ref<StackFrame> frame = nullptr;
+                    while (m_System->FrameStackSize() > 0 && !frame && (frame = m_System->PopStackFrame())->GetType() != StackFrameType::Call)
+                        frame = nullptr;
+
+                    if (!frame || frame->GetType() != StackFrameType::Call)
+                    {
+                        throw "Unexpected error. Not in a function!\n";
+                    }
+
+                    auto funcCall = frame.Cast<CallStackFrame>()->GetFuncCall();
+                    m_InstructionIndex = funcCall->GetReturnIndex();
+                    m_System->SetRegistry(funcCall->GetParentRegistry());
+                    return result;
+
                 }
                 else
                 {
@@ -556,7 +599,7 @@ namespace Dern
                 if (m_TokenStack[1]->IsValue("="))
                 {
                     GetIndex(ECount::Pre);
-                    TypeParser parser(m_Registry, 1);
+                    TypeParser parser = m_System->CreateParser(1);
                     auto result = parser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
@@ -584,13 +627,13 @@ namespace Dern
                         {
                             auto data = result->GetData<int>();
                             DEBUG_RESULT(data, "int");
-                            m_Registry->SetEntry<int>(varName, data, false);
+                            m_System->GetRegistry()->SetEntry<int>(varName, data, false);
                         }
                         else if (result->IsOfType<std::string>())
                         {
                             auto data = result->GetData<std::string>();
                             DEBUG_RESULT(data, "string");
-                            m_Registry->SetEntry<std::string>(varName, data, false);
+                            m_System->GetRegistry()->SetEntry<std::string>(varName, data, false);
                         }
                     }
                     else
@@ -621,13 +664,13 @@ namespace Dern
                     }
 
                     int undefinedCheck = 0;
-                    if (!m_Registry->HasAnyEntry(varName))
+                    if (!m_System->GetRegistry()->HasAnyEntry(varName))
                     {
                         undefinedCheck++;
                         std::cerr << "Variable '" << varName << "' is undefined!\n";
                     }
 
-                    if (!m_Registry->HasAnyEntry(varNameRight))
+                    if (!m_System->GetRegistry()->HasAnyEntry(varNameRight))
                     {
                         undefinedCheck++;
                         std::cerr << "Variable '" << varNameRight << "' is undefined!\n";
@@ -636,31 +679,32 @@ namespace Dern
                     if (undefinedCheck > 0) return RNULL();
 
                     Ref<StoredValue> tmp = Ref<StoredValue>::Create();
-                    if (m_Registry->HasEntry<int>(varName))
+                    auto reg = m_System->GetRegistry();
+                    if (reg->HasEntry<int>(varName))
                     {
-                        tmp->SetData<int>(m_Registry->GetEntry<int>(varName));
+                        tmp->SetData<int>(reg->GetEntry<int>(varName));
                     }
-                    else if (m_Registry->HasEntry<std::string>(varName))
+                    else if (reg->HasEntry<std::string>(varName))
                     {
-                        tmp->SetData<std::string>(m_Registry->GetEntry<std::string>(varName));
+                        tmp->SetData<std::string>(reg->GetEntry<std::string>(varName));
                     }
 
-                    if (m_Registry->HasEntry<int>(varNameRight))
+                    if (reg->HasEntry<int>(varNameRight))
                     {
-                        m_Registry->SetEntry<int>(varName, m_Registry->GetEntry<int>(varNameRight));
+                        reg->SetEntry<int>(varName, reg->GetEntry<int>(varNameRight));
                     }
-                    else if (m_Registry->HasEntry<std::string>(varNameRight))
+                    else if (reg->HasEntry<std::string>(varNameRight))
                     {
-                        m_Registry->SetEntry<std::string>(varName, m_Registry->GetEntry<std::string>(varNameRight));
+                        reg->SetEntry<std::string>(varName, reg->GetEntry<std::string>(varNameRight));
                     }
 
                     if (tmp->IsOfType<int>())
                     {
-                        m_Registry->SetEntry<int>(varNameRight, tmp->GetData<int>());
+                        reg->SetEntry<int>(varNameRight, tmp->GetData<int>());
                     }
                     else if (tmp->IsOfType<std::string>())
                     {
-                        m_Registry->SetEntry<std::string>(varNameRight, tmp->GetData<std::string>());
+                        reg->SetEntry<std::string>(varNameRight, tmp->GetData<std::string>());
                     }
 
                     GetIndex(ECount::Pre);
@@ -668,19 +712,10 @@ namespace Dern
                 }
                 else if (m_TokenStack[1]->IsValue("("))
                 {
-                    if (m_FuncMap.find(varName) == m_FuncMap.end())
-                    {
-                        std::cerr << "Unexpected function name '" << varName << "'!\n";
-                        return RNULL();
-                    }
-
-                    auto func = m_FuncMap.at(varName);
-
-                    Ref<Registry> funcLocal = Registry::Create();
                     GetIndex(ECount::Pre);
                     std::vector<Ref<StoredValue>> params;
                     while (true) {
-                        TypeParser parser(m_Registry, 1);
+                        TypeParser parser = m_System->CreateParser(1);
                         auto paramResult = parser.ComputeValue([&](ParseMem& mem)
                         {
                             Ref<Token> token = GetToken(ECount::Post);
@@ -711,51 +746,6 @@ namespace Dern
                             break;
                     }
 
-                    CALL_LOG("Checking Size");
-                    if (params.size() != (size_t)func->GetParamCount())
-                    {
-                        std::cerr << "Invalid func call argument count. Expected '" << func->GetParamCount() << "' but got '" << params.size() << "'!\n";
-                        return RNULL();
-                    }
-
-                    for (size_t index = 0; index < params.size(); index++)
-                    {
-                        auto sv = params.at(index);
-                        if (sv->IsOfType<int>())
-                        {
-                            if (func->At(index).GetType() != EType::Int)
-                            {
-                                std::cerr << "Unexpected type for '" << varName << "' argument #" << index << ". Expected " << FromTypeToString(func->At(index).GetType()) << ", got number!\n";
-                                return RNULL();
-                            }
-
-                            auto name = func->At(index).GetName();
-                            auto data = sv->GetData<int>();
-
-                            CALL_LOG("Setting " << name << "=>Int(" << data << ")");
-                            funcLocal->SetEntry<int>(name, data);
-                        }
-                        else if (sv->IsOfType<std::string>())
-                        {
-                            if (func->At(index).GetType() != EType::Text)
-                            {
-                                std::cerr << "Unexpected type for '" << varName << "' argument #" << index << ". Expected " << FromTypeToString(func->At(index).GetType()) << ", got text!\n";
-                                return RNULL();
-                            }
-
-                            auto name = func->At(index).GetName();
-                            auto data = sv->GetData<std::string>();
-
-                            CALL_LOG("Setting " << name << "=>Text(" << data << ")");
-                            funcLocal->SetEntry<std::string>(name, data);
-                        }
-                        else
-                        {
-                            std::cerr << "Unexpected data type for '" << varName << "' argument #" << index << "!\n";
-                            return RNULL();
-                        }
-                    }
-
                     m_TokenStack[3] = GetToken(ECount::Post);
                     DEBUG_READ(m_TokenStack[3]);
                     if (!m_TokenStack[3]->IsType(TokenType::Sym) || !m_TokenStack[3]->IsValue(";"))
@@ -764,15 +754,7 @@ namespace Dern
                         return RNULL();
                     }
 
-                    auto call = Ref<FuncCall>::Create(GetIndex(), func, m_Registry, funcLocal);
-                    auto frame = Ref<CallStackFrame>::Create(funcLocal, call);
-                    m_FrameStack.push_back(frame);
-                    m_InstructionIndex = func->GetStart();
-                    m_Registry = funcLocal;
-
-                    CALL_LOG(call->ToString() << " " << m_InstructionIndex);
-
-                    RunImpl();
+                    m_System->Call(varName, params);
                     continue;
                 }
                 else
@@ -788,19 +770,18 @@ namespace Dern
                     // Poll EOF
                     m_Data->PollEOF(GetIndex() + 1);
 
-                    auto frame = m_FrameStack[m_FrameStack.size() - 1];
-                    m_FrameStack.erase(m_FrameStack.begin() + (m_FrameStack.size() - 1));
+                    auto frame = m_System->PopStackFrame();
                     if (frame->GetType() == StackFrameType::Call)
                     {
                         auto funcCall = frame.Cast<CallStackFrame>()->GetFuncCall();
                         m_InstructionIndex = funcCall->GetReturnIndex();
-                        m_Registry = funcCall->GetParentRegistry();
+                        m_System->SetRegistry(funcCall->GetParentRegistry());
                         return RNULL();
                     }
                     else
                     {
-                        auto parentFrame = m_FrameStack[m_FrameStack.size() - 1];
-                        m_Registry = parentFrame->GetRegistry();
+                        auto parentFrame = m_System->GetStackFrame(-1);
+                        m_System->SetRegistry(parentFrame->GetRegistry());
                     }
 
                     m_TokenStack[1] = GetToken(ECount::Pre);

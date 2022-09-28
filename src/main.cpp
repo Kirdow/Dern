@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
 	{
 		std::string filepath = argv[1];
-		auto prog = Dern::CreateScope<Dern::LProgram>(filepath);
+		auto prog = Dern::Ref<Dern::LProgram>::Create(filepath);
 		prog->Run();
 	}
 

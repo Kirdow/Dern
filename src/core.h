@@ -19,3 +19,4 @@ namespace Dern
 }
 
 #include "ref.h"
+#include "debug.h"

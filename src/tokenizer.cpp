@@ -180,7 +180,7 @@ namespace Dern
         std::unordered_set<std::string> keywordSet({
             "print", "write",
             "var",
-            "func",
+            "func", "return",
             "if", "unless", "else", "elif", "elun",
             "for", "while", "until",
             "incl"

@@ -1,7 +1,9 @@
-func concatPrint($text: first, $text: second) -> $void {
-    print(first + second);
+func addTwo($number: first, $number: second) -> $number {
+    return first + second;
 }
 
-var first = "Hello, ";
-var second = "World!";
-concatPrint(first, second);
+var a = 7;
+var b = 5;
+print("Calc: (" + a + " - " + b + ") + (" + a + " + " + b + ")");
+var result = (a - b) + addTwo(a, b);
+print("Result is " + result + "!");

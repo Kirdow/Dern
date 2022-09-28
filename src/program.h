@@ -16,6 +16,8 @@ namespace Dern
 	class TokenData;
 	class Token;
 	class StackFrame;
+	class Debug;
+	class LSystem;
 	class LProgram
 	{
 	public:
@@ -23,6 +25,8 @@ namespace Dern
 		~LProgram();
 
 		void Run();
+
+		const Ref<LSystem>& GetSystem() const;
 	private:
 		Ref<StoredValue> RunImpl();
 	private:
@@ -42,13 +46,15 @@ namespace Dern
 		void SetIndex(int index) { m_InstructionIndex = index; }
 
 		const Ref<Token>& GetToken(ECount increment = ECount::None, int offset = 0);
+
+		friend class Debug;
+		friend class LSystem;
 	private:
+		Scope<Debug> m_Debug;
 		Scope<Code> m_Code;
 		Scope<TokenData> m_Data;
 		int m_InstructionIndex;
 		Ref<Token> m_TokenStack[32];
-		Ref<Registry> m_Registry;
-		std::unordered_map<std::string, Ref<FuncDef>> m_FuncMap;
-		std::vector<Ref<StackFrame>> m_FrameStack;
+		Ref<LSystem> m_System;
 	};
 }

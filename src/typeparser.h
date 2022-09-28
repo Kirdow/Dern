@@ -7,6 +7,7 @@
 #include "registry.h"
 #include "token.h"
 #include "parsetoken.h"
+#include "system.h"
 
 namespace Dern
 {
@@ -37,8 +38,8 @@ namespace Dern
     class TypeParser
     {
     public:
-        TypeParser(const Ref<Registry>& reg, int n)
-            : m_Count(n), m_Reg(reg), m_Mem(n) {}
+        TypeParser(WeakRef<LSystem> sys, int n)
+            : m_Count(n), m_Sys(sys), m_Mem(n) {}
 
     public:
         int Count() const { return m_Count; }
@@ -47,7 +48,7 @@ namespace Dern
         Ref<ParseToken> ComputeValue(std::vector<Ref<ParseToken>> v);
     private:
         int m_Count;
-        Ref<Registry> m_Reg;
+        WeakRef<LSystem> m_Sys;
         ParseMem m_Mem;
     };
 }
