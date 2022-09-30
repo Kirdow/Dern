@@ -1,9 +1,30 @@
-func addTwo($number: first, $number: second) -> $number {
-    return first + second;
+func gcd($number: a, $number: b) -> $number {
+    if (b == 0) {
+        return a;
+    }
+
+    return gcd(b, a % b);
 }
 
-var a = 7;
-var b = 5;
-print("Calc: (" + a + " - " + b + ") + (" + a + " + " + b + ")");
-var result = (a - b) + addTwo(a, b);
-print("Result is " + result + "!");
+func loopB($number: a, $number: b) -> $void {
+    if (b <= 1) {
+        return;
+    }
+
+    loopB(a, b - 1);
+    var d = gcd(a, b);
+    write("(" + a + "|" + b + ")/" + d + " ");
+}
+
+func loopA($number: a) -> $void {
+    if (a <= 1) {
+        return;
+    }
+
+    loopA(a - 1);
+    loopB(a, 8);
+    print("");
+}
+
+print("(a|b)/GCD(a,b):");
+loopA(8);

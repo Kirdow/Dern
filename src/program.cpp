@@ -157,7 +157,7 @@ namespace Dern
 
                     continue;
                 }
-                else if (m_TokenStack[0]->IsValue("print"))
+                else if (m_TokenStack[0]->IsValue("print") || m_TokenStack[0]->IsValue("write"))
                 {
                     m_TokenStack[1] = GetToken(ECount::Pre);
                     DEBUG_READ(m_TokenStack[1]);
@@ -191,21 +191,23 @@ namespace Dern
 
                     if (result->HasData())
                     {
+                        std::string eol = (m_TokenStack[0]->IsValue("print") ? "\n" : "");
+
                         if (result->IsOfType<int>())
                         {
                             auto data = result->GetData<int>();
                             DEBUG_RESULT(data, "int");
-                            std::cout << data << "\n";
+                            std::cout << data << eol;
                         }
                         else if (result->IsOfType<std::string>())
                         {
                             auto data = result->GetData<std::string>();
                             DEBUG_RESULT(data, "string");
-                            std::cout << data << "\n";
+                            std::cout << data << eol;
                         }
                         else
                         {
-                            std::cout << "\n";
+                            std::cout << eol;
                         }
                     }
                     else

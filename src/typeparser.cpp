@@ -287,7 +287,7 @@ namespace Dern
         }
 
         DEBUG_LOG("Parsing * /");
-        // * /
+        // * / %
         while (true)
         {
             tmp = v;
@@ -299,7 +299,7 @@ namespace Dern
                     throw "Unexpected token";
 
                 auto sym = token->Cast<SymToken>()->Value;
-                if (sym == "*" || sym == "/")
+                if (sym == "*" || sym == "/" || sym == "%")
                 {
                     auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
@@ -316,10 +316,15 @@ namespace Dern
                         result = leftInt * rightInt;
                         DEBUG_LOG("Computing " << leftInt << " * " << rightInt << " = " << result);
                     }
-                    else
+                    else if (sym == "/")
                     {
                         result = leftInt / rightInt;
                         DEBUG_LOG("Computing " << leftInt << " / " << rightInt << " = " << result);
+                    }
+                    else
+                    {
+                        result = leftInt % rightInt;
+                        DEBUG_LOG("Computing " << leftInt << " % " << rightInt << " = " << result);
                     }
 
                     auto ref = Ref<NumberToken>::Create(result);
