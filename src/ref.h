@@ -197,6 +197,7 @@ namespace Dern
 
         T* operator->() const { return m_Instance; }
         T& operator*() const { return *m_Instance; }
+        const T* Raw() const { return m_Instance; }
 
         bool IsGood() const
         {

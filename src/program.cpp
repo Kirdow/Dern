@@ -64,7 +64,10 @@ namespace Dern
             m_Data = LoadTokenData(m_Code);
             if (!m_Data) return;
 
-            m_System->SetRegistry(Registry::Create());
+            auto reg = Registry::Create();
+            m_System->SetRegistry(reg);
+            Registry::SetGlobal(reg.Raw());
+
             m_InstructionIndex = 0;
 
             RunImpl();

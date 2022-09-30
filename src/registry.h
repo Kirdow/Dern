@@ -34,6 +34,9 @@ namespace Dern
                 if (m_Parent != nullptr)
                     return m_Parent->HasEntry<T>(name);
 
+                if (s_Global.Raw() != this)
+                    return s_Global->HasEntry<T>(name);
+
                 return false;
             }
 
@@ -50,6 +53,9 @@ namespace Dern
             {
                 if (m_Parent != nullptr)
                     return m_Parent->GetEntry<T>(name);
+
+                if (s_Global.Raw() != this)
+                    return s_Global->GetEntry<T>(name);
 
                 return Defaults::GetDefault<T>();
             }
@@ -68,7 +74,15 @@ namespace Dern
                 if (m_Entries.find(name) == m_Entries.end())
                 {
                     if (m_Parent == nullptr)
+                    {
+                        if (s_Global.Raw() != this)
+                        {
+                            s_Global->SetEntry<T>(name, data, definition);
+                            return;
+                        }
+
                         throw "Undefined variable referenced";
+                    }
 
                     m_Parent->SetEntry<T>(name, data, definition);
                     return;
@@ -101,7 +115,9 @@ namespace Dern
         Ref<Registry> GetParent() const { return m_Parent; }
     public:
         static Ref<Registry> Create(const Ref<Registry>& parent = nullptr) { return Ref<Registry>::Create(parent); }
+        static void SetGlobal(WeakRef<Registry> global) { s_Global = global; }
     private:
+        static WeakRef<Registry> s_Global;
         Ref<Registry> m_Parent;
         std::unordered_map<std::string, Ref<StoredValue>> m_Entries;
     };
