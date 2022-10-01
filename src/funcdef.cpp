@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "funcdef.h"
 
 namespace Dern

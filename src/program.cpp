@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "program.h"
 #include "tokenizer.h"
 #include "registry.h"

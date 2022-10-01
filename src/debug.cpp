@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "debug.h"
 
 #include "program.h"

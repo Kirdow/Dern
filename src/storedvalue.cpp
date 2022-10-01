@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "storedvalue.h"
 
 namespace Dern

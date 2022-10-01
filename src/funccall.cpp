@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "funccall.h"
 
 namespace Dern

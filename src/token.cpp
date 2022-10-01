@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "token.h"
 
 namespace Dern

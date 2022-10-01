@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "typeparser.h"
 #include "token.h"
 

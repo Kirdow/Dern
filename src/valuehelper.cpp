@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "valuehelper.h"
 
 namespace Dern::ValueHelper

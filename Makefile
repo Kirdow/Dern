@@ -41,7 +41,7 @@ $(OBJDIR)/$(PCH_TARGET): $(SRCDIR)/$(PRECOMPILED_HEADER) | $(OBJDIR)
 	$(CXX) $(CFLAGS) -MP -MMD -MT$(@:.gch=.d) -o $@ -c $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(OBJDIR)/$(PCH_TARGET) | $(OBJDIR)
-	$(CXX) $(CFLAGS) -MP -MMD -MT$(@:.o=.d) -o $@ -c $<
+	$(CXX) $(CFLAGS) -include $(SRCDIR)/$(PRECOMPILED_HEADER) -MP -MMD -MT$(@:.o=.d) -o $@ -c $<
 
 .PHONY: clean
 clean:
