@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CFLAGS=-g -Wall -std=c++17
+CFLAGS=-g -Wall -std=c++17 -DBUILD_NAME=\"Dern\" -DBUILD_VERSION=\"0.0.0\" -DBUILD_NUMBER=\"dev\"
 LDFLAGS=-g -Wall
 LDLIBS=
 

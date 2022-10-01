@@ -9,6 +9,9 @@ namespace StrUtil
 	int Split(const std::string& str, const std::string& delim, std::vector<std::string>& v);
 	int SplitSymbols(const std::string& str, const std::string& syms, std::vector<std::string>& v);
 
+	bool StartsWith(const std::string& str, const std::string& needle);
+	bool EndsWith(const std::string& str, const std::string& needle);
+
 	namespace Self
 	{
 		inline static void LTrim(std::string& s)

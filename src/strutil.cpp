@@ -51,4 +51,14 @@ namespace StrUtil
 
 		return count;
 	}
+
+	bool StartsWith(const std::string& str, const std::string& needle)
+	{
+		return (str.find(needle) == 0);
+	}
+
+	bool EndsWith(const std::string& str, const std::string& needle)
+	{
+		return (str.find(needle) == str.length() - needle.length());
+	}
 }
