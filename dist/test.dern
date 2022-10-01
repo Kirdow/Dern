@@ -1,7 +1,15 @@
-var age = 20;
-
-if (age >= 18) {
-    print("You've been an adult for " + (age - 18) + " years!");
-} else {
-    print("You've got " + (18 - age) + " years until you're an adult!");
+func getFive() -> $number {
+    return 5;
 }
+
+func printSomething() -> $void {
+    print("something");
+}
+
+func addTwo($number: a, $number: b) -> $number {
+    return a + b;
+}
+
+print("Five: " + getFive());
+printSomething();
+print("5 + 7 = " + addTwo(5, 7));

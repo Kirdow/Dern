@@ -87,29 +87,31 @@ namespace Dern
 
     Ref<StoredValue> LProgram::RunImpl()
     {
+        Ref<Token> tokenStack[32];
+
         while (m_InstructionIndex < m_Data->Count())
         {
-            m_TokenStack[0] = GetToken();
-            DEBUG_READ(m_TokenStack[0]);
+            tokenStack[0] = GetToken();
+            DEBUG_READ(tokenStack[0]);
 
-            if (m_TokenStack[0]->IsType(TokenType::Keyword))
+            if (tokenStack[0]->IsType(TokenType::Keyword))
             {
-                if (m_TokenStack[0]->IsValue("var"))
+                if (tokenStack[0]->IsValue("var"))
                 {
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[1]);
-                    if (!m_TokenStack[1]->IsType(TokenType::Name))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[1]);
+                    if (!tokenStack[1]->IsType(TokenType::Name))
                     {
                         std::cerr << "Failed to var name\n";
                         return RNULL();
                     }
 
-                    std::string varName = m_TokenStack[1]->GetData();
+                    std::string varName = tokenStack[1]->GetData();
 
-                    m_TokenStack[2] = GetToken(ECount::Pre);
+                    tokenStack[2] = GetToken(ECount::Pre);
                     
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!m_TokenStack[2]->IsType(TokenType::Sym) || !m_TokenStack[2]->IsValue("="))
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Sym) || !tokenStack[2]->IsValue("="))
                     {
                         std::cerr << "Expected =\n";
                         return RNULL();
@@ -160,13 +162,13 @@ namespace Dern
 
                     continue;
                 }
-                else if (m_TokenStack[0]->IsValue("print") || m_TokenStack[0]->IsValue("write"))
+                else if (tokenStack[0]->IsValue("print") || tokenStack[0]->IsValue("write"))
                 {
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[1]);
-                    if (!m_TokenStack[1]->IsType(TokenType::Sym) || !m_TokenStack[1]->IsValue("("))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[1]);
+                    if (!tokenStack[1]->IsType(TokenType::Sym) || !tokenStack[1]->IsValue("("))
                     {
-                        std::cerr << "Unexpected '" << m_TokenStack[1]->GetData() << "', expected '('\n";
+                        std::cerr << "Unexpected '" << tokenStack[1]->GetData() << "', expected '('\n";
                         return RNULL();
                     }
 
@@ -194,7 +196,7 @@ namespace Dern
 
                     if (result->HasData())
                     {
-                        std::string eol = (m_TokenStack[0]->IsValue("print") ? "\n" : "");
+                        std::string eol = (tokenStack[0]->IsValue("print") ? "\n" : "");
 
                         if (result->IsOfType<int>())
                         {
@@ -219,21 +221,21 @@ namespace Dern
                         std::cout << "\n";
                     }
 
-                    m_TokenStack[2] = GetToken(ECount::Post);
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!m_TokenStack[2]->IsType(TokenType::Sym) || !m_TokenStack[2]->IsValue(";"))
+                    tokenStack[2] = GetToken(ECount::Post);
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Sym) || !tokenStack[2]->IsValue(";"))
                     {
-                        std::cerr << "Unexpected '" << m_TokenStack[2]->GetData() << "', expected ';'\n";
+                        std::cerr << "Unexpected '" << tokenStack[2]->GetData() << "', expected ';'\n";
                         return RNULL();
                     }
                 }
-                else if (m_TokenStack[0]->IsValue("if"))
+                else if (tokenStack[0]->IsValue("if"))
                 {
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[1]);
-                    if (!m_TokenStack[1]->IsType(TokenType::Sym) || !m_TokenStack[1]->IsValue("("))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[1]);
+                    if (!tokenStack[1]->IsType(TokenType::Sym) || !tokenStack[1]->IsValue("("))
                     {
-                        std::cerr << "Unexpected '" << m_TokenStack[1]->GetData() << "', expected '('\n";
+                        std::cerr << "Unexpected '" << tokenStack[1]->GetData() << "', expected '('\n";
                         return RNULL();
                     }
 
@@ -260,15 +262,15 @@ namespace Dern
                         return token;
                     });
 
-                    m_TokenStack[2] = GetToken(ECount::None, -1);
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!Tokenizer::IsComparisonToken(m_TokenStack[2]))
+                    tokenStack[2] = GetToken(ECount::None, -1);
+                    DEBUG_READ(tokenStack[2]);
+                    if (!Tokenizer::IsComparisonToken(tokenStack[2]))
                     {
-                        std::cout << "Unexpected token '" << *m_TokenStack[2] << "'!\n";
+                        std::cout << "Unexpected token '" << *tokenStack[2] << "'!\n";
                         return RNULL();
                     }
 
-                    std::string op = m_TokenStack[2]->GetData();
+                    std::string op = tokenStack[2]->GetData();
 
                     TypeParser rightParser = m_System->CreateParser(1);
                     auto rightResult = rightParser.ComputeValue([&](ParseMem& mem)
@@ -332,11 +334,11 @@ namespace Dern
 
                     if (isTrue)
                     {
-                        m_TokenStack[3] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[3]);
-                        if (!m_TokenStack[3]->IsType(TokenType::Sym) || !m_TokenStack[3]->IsValue("{"))
+                        tokenStack[3] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[3]);
+                        if (!tokenStack[3]->IsType(TokenType::Sym) || !tokenStack[3]->IsValue("{"))
                         {
-                            std::cerr << "Unexpected '" << m_TokenStack[3]->GetData() << "'. Expected '{'!\n";
+                            std::cerr << "Unexpected '" << tokenStack[3]->GetData() << "'. Expected '{'!\n";
                             return RNULL();
                         }
 
@@ -348,11 +350,11 @@ namespace Dern
                     }
                     else
                     {
-                        m_TokenStack[3] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[3]);
-                        if (!m_TokenStack[3]->IsType(TokenType::Sym) || !m_TokenStack[3]->IsValue("{"))
+                        tokenStack[3] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[3]);
+                        if (!tokenStack[3]->IsType(TokenType::Sym) || !tokenStack[3]->IsValue("{"))
                         {
-                            std::cerr << "Unexpected '" << m_TokenStack[3]->GetData() << "'. Expected '{'!\n";
+                            std::cerr << "Unexpected '" << tokenStack[3]->GetData() << "'. Expected '{'!\n";
                             return RNULL();
                         }
 
@@ -371,18 +373,18 @@ namespace Dern
                             }
                         } while (true);
 
-                        m_TokenStack[4] = GetToken();
-                        DEBUG_READ(m_TokenStack[4]);
-                        if (!m_TokenStack[4]->IsType(TokenType::Keyword) || !m_TokenStack[4]->IsValue("else"))
+                        tokenStack[4] = GetToken();
+                        DEBUG_READ(tokenStack[4]);
+                        if (!tokenStack[4]->IsType(TokenType::Keyword) || !tokenStack[4]->IsValue("else"))
                             continue;
 
                         // Found else
 
-                        m_TokenStack[5] = GetToken(ECount::Pre);
-                        DEBUG_READ(m_TokenStack[5]);
-                        if (!m_TokenStack[5]->IsType(TokenType::Sym) || !m_TokenStack[5]->IsValue("{"))
+                        tokenStack[5] = GetToken(ECount::Pre);
+                        DEBUG_READ(tokenStack[5]);
+                        if (!tokenStack[5]->IsType(TokenType::Sym) || !tokenStack[5]->IsValue("{"))
                         {
-                            std::cerr << "Unexpected '" << m_TokenStack[5]->GetData() << "', Expected '{'!\n";
+                            std::cerr << "Unexpected '" << tokenStack[5]->GetData() << "', Expected '{'!\n";
                             return RNULL();
                         }
 
@@ -397,101 +399,101 @@ namespace Dern
                     
                     
                 }
-                else if (m_TokenStack[0]->IsValue("func"))
+                else if (tokenStack[0]->IsValue("func"))
                 {
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[1]);
-                    if (!m_TokenStack[1]->IsType(TokenType::Name))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[1]);
+                    if (!tokenStack[1]->IsType(TokenType::Name))
                     {
-                        std::cerr << "Unexpected token type '" << *m_TokenStack[1] << "'. Expected TName!\n";
+                        std::cerr << "Unexpected token type '" << *tokenStack[1] << "'. Expected TName!\n";
                         return RNULL();
                     }
 
-                    std::string funcName = m_TokenStack[1]->GetData();
+                    std::string funcName = tokenStack[1]->GetData();
 
-                    m_TokenStack[2] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!m_TokenStack[2]->IsType(TokenType::Sym) || !m_TokenStack[2]->IsValue("("))
+                    tokenStack[2] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Sym) || !tokenStack[2]->IsValue("("))
                     {
-                        std::cerr << "Unexpected '" << m_TokenStack[2]->GetData() << "'. Expected '('!\n";
+                        std::cerr << "Unexpected '" << tokenStack[2]->GetData() << "'. Expected '('!\n";
                         return RNULL();
                     }
 
                     GetIndex(ECount::Pre);
                     std::vector<ParamDef> params;
                     while (true) {
-                        m_TokenStack[3] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[3]);
-                        if (m_TokenStack[3]->IsType(TokenType::Sym) && m_TokenStack[3]->IsValue(")"))
+                        tokenStack[3] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[3]);
+                        if (tokenStack[3]->IsType(TokenType::Sym) && tokenStack[3]->IsValue(")"))
                             break;
 
-                        if (!m_TokenStack[3]->IsType(TokenType::Type))
+                        if (!tokenStack[3]->IsType(TokenType::Type))
                         {
-                            std::cerr << "Unexpected token type '" << *m_TokenStack[3] << "'. Expected TType!\n";
+                            std::cerr << "Unexpected token type '" << *tokenStack[3] << "'. Expected TType!\n";
                             return RNULL();
                         }
 
-                        EType type = FromStringToType(m_TokenStack[3]->GetData());
+                        EType type = FromStringToType(tokenStack[3]->GetData());
                         
-                        m_TokenStack[4] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[4]);
-                        if (!m_TokenStack[4]->IsType(TokenType::Sym) || !m_TokenStack[4]->IsValue(":"))
+                        tokenStack[4] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[4]);
+                        if (!tokenStack[4]->IsType(TokenType::Sym) || !tokenStack[4]->IsValue(":"))
                         {
-                            std::cerr << "Unexpected token '" << m_TokenStack[4]->GetData() << "'. Expected ':'!\n";
+                            std::cerr << "Unexpected token '" << tokenStack[4]->GetData() << "'. Expected ':'!\n";
                             return RNULL();
                         }
 
-                        m_TokenStack[5] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[5]);
-                        if (!m_TokenStack[5]->IsType(TokenType::Name))
+                        tokenStack[5] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[5]);
+                        if (!tokenStack[5]->IsType(TokenType::Name))
                         {
-                            std::cerr << "Unexpected token type '" << *m_TokenStack[5] << "'. Expected TName!\n";
+                            std::cerr << "Unexpected token type '" << *tokenStack[5] << "'. Expected TName!\n";
                             return RNULL();
                         }
 
-                        std::string name = m_TokenStack[5]->GetData();
+                        std::string name = tokenStack[5]->GetData();
 
                         params.emplace_back(type, name);
-                        m_TokenStack[3] = GetToken(ECount::Post);
-                        DEBUG_READ(m_TokenStack[3]);
-                        if (!m_TokenStack[3]->IsType(TokenType::Sym))
+                        tokenStack[3] = GetToken(ECount::Post);
+                        DEBUG_READ(tokenStack[3]);
+                        if (!tokenStack[3]->IsType(TokenType::Sym))
                         {
-                            std::cerr << "Unexpected token type '" << *m_TokenStack[3] << "'. Expected TSym!\n";
+                            std::cerr << "Unexpected token type '" << *tokenStack[3] << "'. Expected TSym!\n";
                             return RNULL();
                         }
 
-                        if (!m_TokenStack[3]->IsValue(",") && !m_TokenStack[3]->IsValue(")"))
+                        if (!tokenStack[3]->IsValue(",") && !tokenStack[3]->IsValue(")"))
                         {
-                            std::cerr << "Unexpected token '" << m_TokenStack[3]->GetData() << "'. Expected ',' or ')'!\n";
+                            std::cerr << "Unexpected token '" << tokenStack[3]->GetData() << "'. Expected ',' or ')'!\n";
                             return RNULL();
                         }
 
-                        if (m_TokenStack[3]->IsValue(")"))
+                        if (tokenStack[3]->IsValue(")"))
                             break;
                     }
 
-                    m_TokenStack[6] = GetToken(ECount::Post);
-                    DEBUG_READ(m_TokenStack[6]);
-                    if (!m_TokenStack[6]->IsType(TokenType::Sym) || !m_TokenStack[6]->IsValue("->"))
+                    tokenStack[6] = GetToken(ECount::Post);
+                    DEBUG_READ(tokenStack[6]);
+                    if (!tokenStack[6]->IsType(TokenType::Sym) || !tokenStack[6]->IsValue("->"))
                     {
-                        std::cerr << "Unexpected token '" << m_TokenStack[6]->GetData() << "'. Expected '->'!\n";
+                        std::cerr << "Unexpected token '" << tokenStack[6]->GetData() << "'. Expected '->'!\n";
                         return RNULL();
                     }
 
-                    m_TokenStack[7] = GetToken(ECount::Post);
-                    DEBUG_READ(m_TokenStack[7]);
-                    if (!m_TokenStack[7]->IsType(TokenType::Type))
+                    tokenStack[7] = GetToken(ECount::Post);
+                    DEBUG_READ(tokenStack[7]);
+                    if (!tokenStack[7]->IsType(TokenType::Type))
                     {
-                        std::cerr << "Unexpected token type '" << *m_TokenStack[7] << "'. Expected TType!\n";
+                        std::cerr << "Unexpected token type '" << *tokenStack[7] << "'. Expected TType!\n";
                         return RNULL();
                     }
 
-                    EType returnType = FromStringToType(m_TokenStack[7]->GetData());
-                    m_TokenStack[8] = GetToken(ECount::Post);
-                    DEBUG_READ(m_TokenStack[8]);
-                    if (!m_TokenStack[8]->IsType(TokenType::Sym) || !m_TokenStack[8]->IsValue("{"))
+                    EType returnType = FromStringToType(tokenStack[7]->GetData());
+                    tokenStack[8] = GetToken(ECount::Post);
+                    DEBUG_READ(tokenStack[8]);
+                    if (!tokenStack[8]->IsType(TokenType::Sym) || !tokenStack[8]->IsValue("{"))
                     {
-                        std::cerr << "Unexpected token '" << m_TokenStack[8]->GetData() << "'. Expected '{'!\n";
+                        std::cerr << "Unexpected token '" << tokenStack[8]->GetData() << "'. Expected '{'!\n";
                         return RNULL();
                     }
 
@@ -525,10 +527,10 @@ namespace Dern
                     m_System->AddFuncDef(funcName, funcDef);
                     continue;
                 }
-                else if (m_TokenStack[0]->IsValue("return"))
+                else if (tokenStack[0]->IsValue("return"))
                 {
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    if (m_TokenStack[1]->IsType(TokenType::Sym) && m_TokenStack[1]->IsValue(";"))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    if (tokenStack[1]->IsType(TokenType::Sym) && tokenStack[1]->IsValue(";"))
                     {
                         Ref<StackFrame> frame = nullptr;
                         while (m_System->FrameStackSize() > 0 && !frame && (frame = m_System->PopStackFrame())->GetType() != StackFrameType::Call)
@@ -584,24 +586,24 @@ namespace Dern
                 }
                 else
                 {
-                    std::cerr << "Unexpected keyword '" << m_TokenStack[0]->GetData() << "'!\n";
+                    std::cerr << "Unexpected keyword '" << tokenStack[0]->GetData() << "'!\n";
                     return RNULL();
                 }
             }
-            else if (m_TokenStack[0]->IsType(TokenType::Name))
+            else if (tokenStack[0]->IsType(TokenType::Name))
             {
-                std::string varName = m_TokenStack[0]->GetData();
+                std::string varName = tokenStack[0]->GetData();
 
-                m_TokenStack[1] = GetToken(ECount::Pre);
+                tokenStack[1] = GetToken(ECount::Pre);
 
-                DEBUG_READ(m_TokenStack[1]);
-                if (!m_TokenStack[1]->IsType(TokenType::Sym))
+                DEBUG_READ(tokenStack[1]);
+                if (!tokenStack[1]->IsType(TokenType::Sym))
                 {
-                    std::cerr << "Unexpected token '" << *m_TokenStack[1] << "', expected symbol!\n";
+                    std::cerr << "Unexpected token '" << *tokenStack[1] << "', expected symbol!\n";
                     return RNULL();
                 }
 
-                if (m_TokenStack[1]->IsValue("="))
+                if (tokenStack[1]->IsValue("="))
                 {
                     GetIndex(ECount::Pre);
                     TypeParser parser = m_System->CreateParser(1);
@@ -648,23 +650,23 @@ namespace Dern
 
                     continue;
                 }
-                else if (m_TokenStack[1]->IsValue("<=>"))
+                else if (tokenStack[1]->IsValue("<=>"))
                 {
-                    m_TokenStack[2] = GetToken(ECount::Pre);
+                    tokenStack[2] = GetToken(ECount::Pre);
 
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!m_TokenStack[2]->IsType(TokenType::Name))
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Name))
                     {
-                        std::cerr << "Unexpected token '" << *m_TokenStack[2] << "'!\n";
+                        std::cerr << "Unexpected token '" << *tokenStack[2] << "'!\n";
                         return RNULL();
                     }
 
-                    std::string varNameRight = m_TokenStack[2]->GetData();
-                    m_TokenStack[3] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[3]);
-                    if (!m_TokenStack[3]->IsType(TokenType::Sym) || !m_TokenStack[3]->IsValue(";"))
+                    std::string varNameRight = tokenStack[2]->GetData();
+                    tokenStack[3] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[3]);
+                    if (!tokenStack[3]->IsType(TokenType::Sym) || !tokenStack[3]->IsValue(";"))
                     {
-                        std::cerr << "Unexpected token '" << *m_TokenStack[3] << "' expected ';'!\n";
+                        std::cerr << "Unexpected token '" << *tokenStack[3] << "' expected ';'!\n";
                         return RNULL();
                     }
 
@@ -715,47 +717,56 @@ namespace Dern
                     GetIndex(ECount::Pre);
                     continue;
                 }
-                else if (m_TokenStack[1]->IsValue("("))
+                else if (tokenStack[1]->IsValue("("))
                 {
                     GetIndex(ECount::Pre);
                     std::vector<Ref<StoredValue>> params;
-                    while (true) {
-                        TypeParser parser = m_System->CreateParser(1);
-                        auto paramResult = parser.ComputeValue([&](ParseMem& mem)
-                        {
-                            Ref<Token> token = GetToken(ECount::Post);
-                            DEBUG_READ(token);
-                            if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                    tokenStack[2] = GetToken(ECount::None);
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Sym) || !tokenStack[2]->IsValue(")"))
+                    {
+                        while (true) {
+                            TypeParser parser = m_System->CreateParser(1);
+                            auto paramResult = parser.ComputeValue([&](ParseMem& mem)
                             {
-                                ++mem[0];
-                            }
-                            else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
-                            {
-                                if (mem[0] <= 0) return Ref<Token>();
-                                --mem[0];
-                            }
-                            else if (token->IsType(TokenType::Sym) && token->IsValue(","))
-                            {
-                                if (mem[0] <= 0) return Ref<Token>();
-                            }
+                                Ref<Token> token = GetToken(ECount::Post);
+                                DEBUG_READ(token);
+                                if (token->IsType(TokenType::Sym) && token->IsValue("("))
+                                {
+                                    ++mem[0];
+                                }
+                                else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
+                                {
+                                    if (mem[0] <= 0) return Ref<Token>();
+                                    --mem[0];
+                                }
+                                else if (token->IsType(TokenType::Sym) && token->IsValue(","))
+                                {
+                                    if (mem[0] <= 0) return Ref<Token>();
+                                }
 
-                            return token;
-                        });
+                                return token;
+                            });
 
-                        params.push_back(paramResult);
-                        CALL_LOG("Param " << (params.size() - 1) << ": " << paramResult->ToString());
+                            params.push_back(paramResult);
+                            CALL_LOG("Param " << (params.size() - 1) << ": " << paramResult->ToString());
 
-                        m_TokenStack[2] = GetToken(ECount::None, -1);
-                        DEBUG_READ(m_TokenStack[2]);
-                        if (m_TokenStack[2]->IsType(TokenType::Sym) && m_TokenStack[2]->IsValue(")"))
-                            break;
+                            tokenStack[2] = GetToken(ECount::None, -1);
+                            DEBUG_READ(tokenStack[2]);
+                            if (tokenStack[2]->IsType(TokenType::Sym) && tokenStack[2]->IsValue(")"))
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        GetIndex(ECount::Pre);
                     }
 
-                    m_TokenStack[3] = GetToken(ECount::Post);
-                    DEBUG_READ(m_TokenStack[3]);
-                    if (!m_TokenStack[3]->IsType(TokenType::Sym) || !m_TokenStack[3]->IsValue(";"))
+                    tokenStack[3] = GetToken(ECount::Post);
+                    DEBUG_READ(tokenStack[3]);
+                    if (!tokenStack[3]->IsType(TokenType::Sym) || !tokenStack[3]->IsValue(";"))
                     {
-                        std::cerr << "Unexpected token '" << m_TokenStack[3]->GetData() << "'. Expected ';'!\n";
+                        std::cerr << "Unexpected token '" << tokenStack[3]->GetData() << "'. Expected ';'!\n";
                         return RNULL();
                     }
 
@@ -764,13 +775,13 @@ namespace Dern
                 }
                 else
                 {
-                    std::cerr << "Unexpected sym token '" << *m_TokenStack[1] << "'!\n";
+                    std::cerr << "Unexpected sym token '" << *tokenStack[1] << "'!\n";
                     return RNULL();
                 }
             }
-            else if (m_TokenStack[0]->IsType(TokenType::Sym))
+            else if (tokenStack[0]->IsType(TokenType::Sym))
             {
-                if (m_TokenStack[0]->IsValue("}"))
+                if (tokenStack[0]->IsValue("}"))
                 {
                     // Poll EOF
                     m_Data->PollEOF(GetIndex() + 1);
@@ -789,16 +800,16 @@ namespace Dern
                         m_System->SetRegistry(parentFrame->GetRegistry());
                     }
 
-                    m_TokenStack[1] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[1]);
-                    if (!m_TokenStack[1]->IsType(TokenType::Keyword) || !m_TokenStack[1]->IsValue("else"))
+                    tokenStack[1] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[1]);
+                    if (!tokenStack[1]->IsType(TokenType::Keyword) || !tokenStack[1]->IsValue("else"))
                         continue;
 
-                    m_TokenStack[2] = GetToken(ECount::Pre);
-                    DEBUG_READ(m_TokenStack[2]);
-                    if (!m_TokenStack[2]->IsType(TokenType::Sym) || !m_TokenStack[2]->IsValue("{"))
+                    tokenStack[2] = GetToken(ECount::Pre);
+                    DEBUG_READ(tokenStack[2]);
+                    if (!tokenStack[2]->IsType(TokenType::Sym) || !tokenStack[2]->IsValue("{"))
                     {
-                        std::cerr << "Unexpected '" << m_TokenStack[2]->GetData() << "', expected '{'!\n";
+                        std::cerr << "Unexpected '" << tokenStack[2]->GetData() << "', expected '{'!\n";
                         return RNULL();
                     }
 
@@ -822,13 +833,13 @@ namespace Dern
                 }
                 else
                 {
-                    std::cerr << "Unexpected token '" << *m_TokenStack[0] << "'!\n";
+                    std::cerr << "Unexpected token '" << *tokenStack[0] << "'!\n";
                     return RNULL();
                 }
             }
             else
             {
-                std::cerr << "Unexpected token '" << *m_TokenStack[0] << "'!\n";
+                std::cerr << "Unexpected token '" << *tokenStack[0] << "'!\n";
                 return RNULL();
             }
         }

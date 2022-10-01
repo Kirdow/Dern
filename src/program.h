@@ -54,7 +54,6 @@ namespace Dern
 		Scope<Code> m_Code;
 		Scope<TokenData> m_Data;
 		int m_InstructionIndex;
-		Ref<Token> m_TokenStack[32];
 		Ref<LSystem> m_System;
 	};
 }

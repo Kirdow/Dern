@@ -194,6 +194,16 @@ namespace Dern
                             }
 
                             std::vector<Ref<ParseToken>> partVec(v.begin() + index, v.begin() + endIndex);
+                            if (partVec.size() == 0)
+                            {
+                                if (!isComma && params.size() == 0)
+                                {
+                                    indexEnd = endIndex;
+                                    break;
+                                }
+
+                                throw "Unexpected ')'. Expected expression!";
+                            }
                             DEBUG_LOG("Found param");
                             auto paramResult = ComputeValue(partVec);
                             if (!paramResult) throw "Failed to parse param";
