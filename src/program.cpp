@@ -64,6 +64,7 @@ namespace Dern
             if (!m_Data) return;
 
             auto reg = Registry::Create();
+            m_System->AddStackFrame(Ref<GlobalStackFrame>::Create(reg));
             m_System->SetRegistry(reg);
             Registry::SetGlobal(reg.Raw());
 

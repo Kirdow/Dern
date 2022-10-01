@@ -1,2 +1,7 @@
-var name = read("What is your name? ");
-print("Hello, " + name);
+var age = 20;
+
+if (age >= 18) {
+    print("You've been an adult for " + (age - 18) + " years!");
+} else {
+    print("You've got " + (18 - age) + " years until you're an adult!");
+}
