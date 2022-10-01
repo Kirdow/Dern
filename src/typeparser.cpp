@@ -1,5 +1,6 @@
 #include "typeparser.h"
 #include "token.h"
+#include <regex>
 
 namespace Dern
 {
@@ -221,6 +222,43 @@ namespace Dern
                                 indexEnd = endIndex;
                                 break;
                             }
+                        }
+
+                        if (funcName == "read")
+                        {
+                            if (params.size() >= 1)
+                            {
+                                auto precedingValue = params.at(0);
+                                if (precedingValue->IsOfType<std::string>())
+                                {
+                                    auto str = precedingValue->GetData<std::string>();
+                                    std::cout << str;
+                                }
+                                else
+                                    throw "Invalid parameter";
+                            }
+
+
+                            std::string line;
+                            while (line.length() == 0)
+                                std::getline(std::cin, line);
+                            
+                            Ref<ParseToken> tokenResult = nullptr;
+                            std::regex numberRegex("\\-?[0-9]+", std::regex_constants::ECMAScript);
+                            std::smatch sm;
+                            if (std::regex_search(line, sm, numberRegex) && !sm.prefix().matched && !sm.suffix().matched)
+                            {
+                                int num = std::stoi(line);
+                                tokenResult = Ref<NumberToken>::Create(num);
+                            }
+                            else
+                            {
+                                tokenResult = Ref<TextToken>::Create(line);
+                            }
+
+                            v.erase(v.begin() + i - 1, v.begin() + indexEnd);
+                            v[i - 1] = tokenResult;
+                            break;
                         }
 
                         auto result = m_Sys->Call(funcName, params);
