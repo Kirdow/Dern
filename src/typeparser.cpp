@@ -512,6 +512,72 @@ namespace Dern
                 break;
         }
 
+        DEBUG_LOG("Parsing conditionals");
+        // == != < > <= >=
+        while (true)
+        {
+            tmp = v;
+
+            for (size_t i = 1; i + 1 < v.size(); i += 2)
+            {
+                auto token = v.at(i);
+                if (!token->IsType(PTokenType::Sym))
+                    throw "Unexpected token";
+
+                auto sym = token->Cast<SymToken>()->Value;
+                if (sym == "==" || sym == "!=" || sym == "<" || sym == ">" || sym == "<=" || sym == ">=")
+                {
+                    auto left = v.at(i - 1);
+                    auto right = v.at(i + 1);
+
+                    bool isLeftText = (left->IsType(PTokenType::Text));
+                    bool isRightText = (right->IsType(PTokenType::Text));
+
+                    if (isLeftText != isRightText)
+                        throw "Conditional type mismatch";
+
+                    bool resultState = false;
+
+                    if (isLeftText)
+                    {
+                        if (sym != "==" && sym != "!=")
+                            throw "Unexpected symbol, expected '==' or '!='";
+                        
+                        auto leftStr = left->Cast<TextToken>()->Value;
+                        auto rightStr = right->Cast<TextToken>()->Value;
+
+                        DEBUG_LOG("Condition Text (" << leftStr << " " << sym << " " << rightStr << ")");
+
+                        if (sym == "==") resultState = (leftStr == rightStr);
+                        else resultState = (leftStr != rightStr);
+                    }
+                    else
+                    {
+                        auto leftInt = GetMDASValue(left, m_Sys->GetRegistry());
+                        auto rightInt = GetMDASValue(right, m_Sys->GetRegistry());
+
+                        DEBUG_LOG("Condition Number (" << leftInt << " " << sym << " " << rightInt << ")");
+
+                        if (sym == "==") resultState = (leftInt == rightInt);
+                        else if (sym == "!=") resultState = (leftInt != rightInt);
+                        else if (sym == "<") resultState = (leftInt < rightInt);
+                        else if (sym == ">") resultState = (leftInt > rightInt);
+                        else if (sym == "<=") resultState = (leftInt <= rightInt);
+                        else resultState = (leftInt >= rightInt);
+                    }
+
+                    auto ref = Ref<NumberToken>::Create(resultState ? 1 : 0);
+                    v[i] = ref;
+                    v.erase(v.begin() + i + 1);
+                    v.erase(v.begin() + i - 1);
+                    break;
+                }
+            }
+
+            if (v.size() == tmp.size())
+                break;
+        }
+
         if (v.size() != 1) throw "Unexpected token parse result size!";
 
         DEBUG_LOG("Exiting");

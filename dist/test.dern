@@ -1,15 +1,30 @@
-func getFive() -> $number {
-    return 5;
+var x = 5;
+var y = 7;
+
+print("x: " + x);
+print("y: " + y);
+
+print("If Statement");
+if (x == y) {
+    print("x == y true");
+} else {
+    print("x == y false");
 }
 
-func printSomething() -> $void {
-    print("something");
+print("Variable assignment");
+var state = x < y;
+print("state: " + state);
+
+print("Arithmetic operations");
+print("5 * (y >= x): " + (5 * (y >= x)));
+
+print("Parameter input");
+func printIf($number: cond, $text: str) -> $void {
+    if (cond == 1) {
+        print(str);
+    }
 }
 
-func addTwo($number: a, $number: b) -> $number {
-    return a + b;
-}
-
-print("Five: " + getFive());
-printSomething();
-print("5 + 7 = " + addTwo(5, 7));
+printIf(x == 4, "x == 4");
+printIf(x == 5, "x == 5");
+printIf(x == 6, "x == 6");
