@@ -240,40 +240,8 @@ namespace Dern
                     }
 
                     GetIndex(ECount::Pre);
-                    TypeParser leftParser = m_System->CreateParser(1);
-                    auto leftResult = leftParser.ComputeValue([&](ParseMem& mem)
-                    {
-                        Ref<Token> token = GetToken(ECount::Post);
-                        DEBUG_READ(token);
-                        if (token->IsType(TokenType::Sym) && token->IsValue("("))
-                        {
-                            ++mem[0];
-                        }
-                        else if (token->IsType(TokenType::Sym) && token->IsValue(")"))
-                        {
-                            if (mem[0] <= 0) throw "Unexpected ')'";
-                            --mem[0];
-                        }
-                        else if (Tokenizer::IsComparisonToken(token))
-                        {
-                            if (mem[0] <= 0) return Ref<Token>();
-                        }
-
-                        return token;
-                    });
-
-                    tokenStack[2] = GetToken(ECount::None, -1);
-                    DEBUG_READ(tokenStack[2]);
-                    if (!Tokenizer::IsComparisonToken(tokenStack[2]))
-                    {
-                        std::cout << "Unexpected token '" << *tokenStack[2] << "'!\n";
-                        return RNULL();
-                    }
-
-                    std::string op = tokenStack[2]->GetData();
-
-                    TypeParser rightParser = m_System->CreateParser(1);
-                    auto rightResult = rightParser.ComputeValue([&](ParseMem& mem)
+                    TypeParser parser = m_System->CreateParser(1);
+                    auto result = parser.ComputeValue([&](ParseMem& mem)
                     {
                         Ref<Token> token = GetToken(ECount::Post);
                         DEBUG_READ(token);
@@ -286,49 +254,26 @@ namespace Dern
                             if (mem[0] <= 0) return Ref<Token>();
                             --mem[0];
                         }
-                        else if (token->IsType(TokenType::Sym) && token->IsValue(";"))
-                        {
-                            throw "Unexpected ';'";
-                        }
+
                         return token;
                     });
 
-                    if (!leftResult->HasData() || !rightResult->HasData())
+                    if (!result->IsOfType<int>())
                     {
-                        std::cerr << "Unexpected, comparison expression expected!\n";
+                        std::cerr << "Unexpected condition type. Expected Number!\n";
                         return RNULL();
                     }
 
                     bool isTrue = false;
-                    if (leftResult->IsOfType<int>())
+                    if (result->IsOfType<int>())
                     {
-                        if (!rightResult->IsOfType<int>())
-                        {
-                            std::cerr << "Unexpected comparison type mismatch, expected right int!\n";
-                            return RNULL();
-                        }
+                        int resultInt = result->GetData<int>();
 
-                        int leftInt = leftResult->GetData<int>();
-                        int rightInt = rightResult->GetData<int>();
-
-                        isTrue = ComparisonOperator<int>(leftInt, rightInt, op);
-                    }
-                    else if (leftResult->IsOfType<std::string>())
-                    {
-                        if (!rightResult->IsOfType<std::string>())
-                        {
-                            std::cerr << "Unexpected comparison type mismatch, expected right text!\n";
-                            return RNULL();
-                        }
-
-                        std::string leftStr = leftResult->GetData<std::string>();
-                        std::string rightStr = rightResult->GetData<std::string>();
-
-                        isTrue = ComparisonOperator<std::string>(leftStr, rightStr, op);
+                        isTrue = resultInt != 0;
                     }
                     else
                     {
-                        std::cerr << "Unexpected comparison type, expected left int or text!\n";
+                        std::cerr << "Unexpected condition type, expected left int or text!\n";
                         return RNULL();
                     }
 
