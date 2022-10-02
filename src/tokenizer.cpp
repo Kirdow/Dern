@@ -182,7 +182,8 @@ namespace Dern
             "func", "return",
             "if", "unless", "else", "elif", "elun",
             "for", "while", "until",
-            "incl"
+            "incl",
+            "true", "false"
         });
 
         NamedRegex allRegex[5] = {

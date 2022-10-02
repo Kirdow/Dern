@@ -29,6 +29,12 @@ namespace Dern
                 std::string strData = token->GetData();
                 tokens.push_back(Ref<TextToken>::Create(strData));
             }
+            else if (token->IsType(TokenType::Keyword))
+            {
+                std::string strData = token->GetData();
+                if (strData == "true" || strData == "false")
+                    tokens.push_back(Ref<SymToken>::Create(strData));
+            }
         }
 
         DEBUG_LOG("TypeParser::Compute");
@@ -76,6 +82,24 @@ namespace Dern
         }
 
         throw "Unexpected MDAS token type";
+    }
+
+    static bool IsConditionState(const Ref<ParseToken>& token)
+    {
+        if (!token->IsType(PTokenType::Sym)) return false;
+
+        auto word = token->Cast<SymToken>()->Value;
+        return word == "true" || word == "false";
+    }
+
+    static bool GetConditionState(const Ref<ParseToken>& token)
+    {
+        if (!token->IsType(PTokenType::Sym)) throw "Unexpected Condition Token Type";
+
+        auto word = token->Cast<SymToken>()->Value;
+        if (word == "true" || word == "false") return word == "true";
+
+        throw "Unexpected Condition Token";
     }
 
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
@@ -587,17 +611,65 @@ namespace Dern
                     }
                     else
                     {
-                        auto leftInt = GetMDASValue(left, m_Sys->GetRegistry());
-                        auto rightInt = GetMDASValue(right, m_Sys->GetRegistry());
+                        bool isLeftCond = IsConditionState(left);
+                        bool isRightCond = IsConditionState(right);
 
-                        DEBUG_LOG("Condition Number (" << leftInt << " " << sym << " " << rightInt << ")");
+                        if (isLeftCond || isRightCond)
+                        {
+                            if (sym != "==" && sym != "!=")
+                                throw "Unexpected symbol, expected '==' or '!='";
 
-                        if (sym == "==") resultState = (leftInt == rightInt);
-                        else if (sym == "!=") resultState = (leftInt != rightInt);
-                        else if (sym == "<") resultState = (leftInt < rightInt);
-                        else if (sym == ">") resultState = (leftInt > rightInt);
-                        else if (sym == "<=") resultState = (leftInt <= rightInt);
-                        else resultState = (leftInt >= rightInt);
+                            if (isLeftCond && isRightCond)
+                            {
+                                bool leftCond = GetConditionState(left);
+                                bool rightCond = GetConditionState(right);
+
+                                if (sym == "==") resultState = (leftCond == rightCond);
+                                else resultState = (leftCond != rightCond);
+                            }
+                            else if (isLeftCond)
+                            {
+                                bool leftCond = GetConditionState(left);
+                                int rightInt = GetMDASValue(right, m_Sys->GetRegistry());
+
+                                bool state = false;
+
+                                if (leftCond) state = rightInt != 0;
+                                else state = rightInt == 0;
+
+                                if (sym == "!=") state = !state;
+
+                                resultState = state;
+                            }
+                            else
+                            {
+                                bool rightCond = GetConditionState(right);
+                                int leftInt = GetMDASValue(left, m_Sys->GetRegistry());
+
+                                bool state = false;
+
+                                if (rightCond) state = leftInt != 0;
+                                else state = leftInt == 0;
+
+                                if (sym == "!=") state = !state;
+
+                                resultState = state;
+                            }
+                        }
+                        else
+                        {
+                            auto leftInt = GetMDASValue(left, m_Sys->GetRegistry());
+                            auto rightInt = GetMDASValue(right, m_Sys->GetRegistry());
+
+                            DEBUG_LOG("Condition Number (" << leftInt << " " << sym << " " << rightInt << ")");
+
+                            if (sym == "==") resultState = (leftInt == rightInt);
+                            else if (sym == "!=") resultState = (leftInt != rightInt);
+                            else if (sym == "<") resultState = (leftInt < rightInt);
+                            else if (sym == ">") resultState = (leftInt > rightInt);
+                            else if (sym == "<=") resultState = (leftInt <= rightInt);
+                            else resultState = (leftInt >= rightInt);
+                        }
                     }
 
                     auto ref = Ref<NumberToken>::Create(resultState ? 1 : 0);
