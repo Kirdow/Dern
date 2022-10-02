@@ -5,18 +5,20 @@ print("x: " + x);
 print("y: " + y);
 
 print("If Statement");
-if (x == y || x < y) {
-    print("x == y || x < y true");
+var b0 = x == y || x < y;
+if (b0) {
+    print("(b0) true");
 } else {
-    print("x == y || x < y false");
+    print("(b0) false");
 }
 
 print("Variable assignment");
-var state = x < y && y == 6 || x == 5;
+var b1 = x < y && y == 6;
+var state = !b1;
 print("state: " + state);
 
 print("Arithmetic operations");
-print("5 * (y >= x) && 1: " + (5 * (y >= x) && 1));
+print("!(5 * (y >= x) && 0): " + (!(5 * (y >= x) && 0)));
 
 print("Parameter input");
 func printIf($number: cond, $text: str) -> $void {
@@ -25,6 +27,6 @@ func printIf($number: cond, $text: str) -> $void {
     }
 }
 
-printIf(x == 4 && 4, "x == 4 && 4");
-printIf(x == 5 && 5, "x == 5 && 5");
-printIf(x == 6 && 6, "x == 6 && 6");
+printIf(!(x == 4), "!(x == 4)");
+printIf(!(x == 5), "!(x == 5)");
+printIf(!(x == 6), "!(x == 6)");

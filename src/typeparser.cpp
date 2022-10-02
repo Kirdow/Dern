@@ -333,6 +333,40 @@ namespace Dern
                 break;
         }
 
+        DEBUG_LOG("Parsing !");
+        // !
+        while (true)
+        {
+            tmp = v;
+
+            for (size_t i = 0; i + 1 < v.size(); i += 2)
+            {
+                auto token = v.at(i);
+                if (!token->IsType(PTokenType::Sym))
+                    continue;
+
+                auto sym = token->Cast<SymToken>()->Value;
+                if (sym != "!")
+                    continue;
+
+                auto token0 = v.at(i + 1);
+                if (!ValidMDASToken(token0))
+                    throw "Unexpected token type for !";
+                
+                auto tokenInt = GetMDASValue(token0, m_Sys->GetRegistry());
+
+                int result = (tokenInt != 0) ? 0 : 1;
+
+                auto ref = Ref<NumberToken>::Create(result);
+                v[i] = ref;
+                v.erase(v.begin() + i + 1);
+                break;
+            }
+
+            if (v.size() == tmp.size())
+                break;
+        }
+
         DEBUG_LOG("Parsing * /");
         // * / %
         while (true)
