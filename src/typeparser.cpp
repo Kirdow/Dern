@@ -64,26 +64,6 @@ namespace Dern
         return Ref<StoredValue>::Create();
     }
 
-    static bool ValidMDASToken(const Ref<ParseToken>& token)
-    {
-        return token->IsType(PTokenType::Int) || token->IsType(PTokenType::Var);
-    }
-
-    static int GetMDASValue(const Ref<ParseToken>& token, const Ref<Registry>& reg)
-    {
-        if (token->IsType(PTokenType::Int)) return token->Cast<NumberToken>()->Value;
-        else if (token->IsType(PTokenType::Var))
-        {
-            auto name = token->Cast<VarToken>()->Value;
-            if (!reg->HasEntry<int>(name))
-                throw "Unexpected variable name";
-
-            return reg->GetEntry<int>(name);
-        }
-
-        throw "Unexpected MDAS token type";
-    }
-
     static bool IsConditionState(const Ref<ParseToken>& token)
     {
         if (!token->IsType(PTokenType::Sym)) return false;
@@ -100,6 +80,30 @@ namespace Dern
         if (word == "true" || word == "false") return word == "true";
 
         throw "Unexpected Condition Token";
+    }
+
+    static bool ValidMDASToken(const Ref<ParseToken>& token)
+    {
+        if (IsConditionState(token)) return true;
+
+        return token->IsType(PTokenType::Int) || token->IsType(PTokenType::Var);
+    }
+
+    static int GetMDASValue(const Ref<ParseToken>& token, const Ref<Registry>& reg)
+    {
+        if (IsConditionState(token)) return GetConditionState(token) ? 1 : 0;
+
+        if (token->IsType(PTokenType::Int)) return token->Cast<NumberToken>()->Value;
+        else if (token->IsType(PTokenType::Var))
+        {
+            auto name = token->Cast<VarToken>()->Value;
+            if (!reg->HasEntry<int>(name))
+                throw "Unexpected variable name";
+
+            return reg->GetEntry<int>(name);
+        }
+
+        throw "Unexpected MDAS token type";
     }
 
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
