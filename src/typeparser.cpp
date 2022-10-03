@@ -58,6 +58,22 @@ namespace Dern
                 DEBUG_LOG("TypeParser::Result::Text(" << data << ")");
                 return ref;
             }
+            else if (result->IsType(PTokenType::Logic))
+            {
+                auto logical = result->Cast<LogicalToken>();
+
+                auto result2 = EvaluateLogicalValue(logical);
+                if (!result2 || !result2->IsType(PTokenType::Int))
+                    throw "Unexpected logical value result";
+
+                int data = result2->Cast<NumberToken>()->Value;
+                auto ref = Ref<StoredValue>::Create();
+                ref->SetData<int>(data);
+                DEBUG_LOG("TypeParser::result::Int(" << data << ")");
+
+                const_cast<LogicalToken*>(logical)->Clear();
+                return ref;
+            }
         }
 
         DEBUG_LOG("TypeParser::Result::None");
@@ -106,6 +122,21 @@ namespace Dern
         throw "Unexpected MDAS token type";
     }
 
+#ifdef ENABLE_DEBUG_LOG
+    static void LogVectorToken(const std::vector<Ref<ParseToken>>& tokens)
+    {
+        std::cout << "LOGICAL OP !!!!!!\n";
+        int i = 0;
+        for (auto entry : tokens)
+        {
+            std::cout << (i++) << ": " << *entry << "\n";
+        }
+    }
+
+    #define LOG_VECTOR_TOKEN(v) LogVectorToken(v)
+#else
+    #define LOG_VECTOR_TOKEN(v)
+#endif
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
     {
         if (v.size() == 0)
@@ -113,6 +144,17 @@ namespace Dern
             DEBUG_LOG("TypeParser(Input is empty, returning None)");
             return Ref<ParseToken>::Create(PTokenType::None);
         }
+
+        #ifdef ENABLE_DEBUG_LOG
+
+        int index = 0;
+        for (auto& val : v)
+        {
+            DEBUG_LOG("Val[" << index << "]: " << "\"" << *val << "\"");
+            ++index;
+        }
+
+        #endif
 
         if (v.size() == 1)
         {
@@ -152,23 +194,31 @@ namespace Dern
                     return Ref<TextToken>::Create(result);
                 }
             }
+            else if (token->IsType(PTokenType::Logic))
+            {
+                auto logical = token->Cast<LogicalToken>();
+
+                auto result = EvaluateLogicalValue(logical);
+                if (!result || !result->IsType(PTokenType::Int))
+                    throw "Unexpected logical value result";
+
+                int data = result->Cast<NumberToken>()->Value;
+                auto ref = Ref<NumberToken>::Create(data);
+                DEBUG_LOG("TypeParser::Int(" << data << ")");
+
+                const_cast<LogicalToken*>(logical)->Clear();
+                return ref;
+            }
             
             DEBUG_LOG("Type::None");
             return Ref<ParseToken>::Create(PTokenType::None);
         }
 
-        #ifdef ENABLE_DEBUG_LOG
-
-        int index = 0;
-        for (auto& val : v)
-        {
-            DEBUG_LOG("Val[" << index << "]: " << "\"" << *val << "\"");
-            ++index;
-        }
-
-        #endif
-
         std::vector<Ref<ParseToken>> tmp;
+
+        tmp = v;
+        v = ComputeLogicalValue(v);
+        LOG_VECTOR_TOKEN(v);
 
         DEBUG_LOG("PARSING ( )");
         // ( )
@@ -688,56 +738,343 @@ namespace Dern
                 break;
         }
 
-        DEBUG_LOG("Parsing logical operators");
-        // &&
-        while (true)
-        {
-            tmp = v;
-
-            for (size_t i = 1; i + 1 < v.size(); i += 2)
-            {
-                auto token = v.at(i);
-                if (!token->IsType(PTokenType::Sym))
-                    throw "Unexpected token";
-
-                auto sym = token->Cast<SymToken>()->Value;
-                if (sym == "&&" || sym == "||")
-                {
-                    auto left = v.at(i - 1);
-                    auto right = v.at(i + 1);
-
-                    bool isLeftText = (left->IsType(PTokenType::Text));
-                    bool isRightText = (right->IsType(PTokenType::Text));
-
-                    if (isLeftText || isRightText)
-                        throw "Logical operation type mismatch";
-
-                    bool resultState = false;
-
-                    auto leftInt = GetMDASValue(left, m_Sys->GetRegistry());
-                    auto rightInt = GetMDASValue(right, m_Sys->GetRegistry());
-
-                    DEBUG_LOG("Logical (" << leftInt << " " << sym << " " << rightInt << ")");
-
-                    if (sym == "&&") resultState = ((leftInt != 0) && (rightInt != 0));
-                    else resultState = ((leftInt != 0) || (rightInt != 0));
-
-                    auto ref = Ref<NumberToken>::Create(resultState ? 1 : 0);
-                    v[i] = ref;
-                    v.erase(v.begin() + i + 1);
-                    v.erase(v.begin() + i - 1);
-                    break;
-                }
-            }
-
-            if (v.size() == tmp.size())
-                break;
-        }
-
         if (v.size() != 1) throw "Unexpected token parse result size!";
+
+        LOG_VECTOR_TOKEN(v);
 
         DEBUG_LOG("Exiting");
         return v[0];
         
+    }
+
+    std::vector<Ref<ParseToken>> TypeParser::ComputeLogicalValue(std::vector<Ref<ParseToken>> v, int depth)
+    {
+        std::vector<Ref<ParseToken>> tmp;
+
+        DEBUG_LOG("Parsing logical operators");
+
+        size_t i = 0;
+        const SymToken* token = nullptr;
+        for (i = 0; i < v.size(); i++)
+        {
+            auto vtoken = v.at(i);
+            if (!vtoken->IsType(PTokenType::Sym))
+                continue;
+
+            auto sym = vtoken->Cast<SymToken>()->Value;
+            if (sym == "&&" || sym == "||")
+            {
+                DEBUG_LOG("Found && or || at " << i);
+                token = vtoken->Cast<SymToken>();
+                break;
+            }
+        }
+
+        if (token == nullptr) return v;
+
+        int memLeft = 0;
+
+        int endIndexLeft = i;
+        int startIndexLeft = i - 1;
+        while (startIndexLeft >= 0)
+        {
+            auto left = v.at(startIndexLeft);
+            if (left->IsType(PTokenType::Sym))
+            {
+                auto sym = left->Cast<Dern::SymToken>()->Value;
+                if (sym == ")") ++memLeft;
+                else if (sym == "(")
+                {
+                    if (memLeft == 0) {
+                        ++startIndexLeft;
+                        break;
+                    }
+
+                    --memLeft;
+                }
+            }
+
+            if (--startIndexLeft < 0)
+            {
+                if (memLeft > 0)
+                {
+                    throw "Unexpected start of parse section";
+                }
+
+                startIndexLeft = 0;
+                break;
+            }
+        }
+
+        int memRight = 0;
+
+        int startIndexRight = i + 1;
+        int endIndexRight = i + 1;
+        while (static_cast<size_t>(endIndexRight) < v.size())
+        {
+            auto right = v.at(endIndexRight);
+            if (right->IsType(PTokenType::Sym))
+            {
+                auto sym = right->Cast<Dern::SymToken>()->Value;
+                if (sym == "(") ++memRight;
+                else if (sym == ")")
+                {
+                    if (memRight == 0) {
+                        DEBUG_LOG("Found end right " << endIndexRight);
+                        break;
+                    }
+
+                    --memRight;
+                }
+
+                if (memRight == 0)
+                {
+                    if (sym == "||")
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (static_cast<size_t>(++endIndexRight) >= v.size())
+            {
+                if (memRight > 0) throw "Unexpected end of parse section";
+
+                endIndexRight = v.size();
+                break;
+            }
+        }
+
+        std::vector<Ref<ParseToken>> leftVec(v.begin() + startIndexLeft, v.begin() + endIndexLeft);
+        std::vector<Ref<ParseToken>> rightVec(v.begin() + startIndexRight, v.begin() + endIndexRight);
+        rightVec = ComputeLogicalValue(rightVec, depth + 1);
+        std::string val = token->Value;
+
+        v.erase(v.begin() + startIndexLeft + 1, v.begin() + endIndexRight);
+        v[startIndexLeft] = Ref<LogicalToken>::Create(val, leftVec, rightVec);
+        
+        if (static_cast<size_t>(startIndexLeft + 1) < v.size())
+        {
+           auto nextToken = v.at(startIndexLeft + 1);
+            if (depth == 0 && nextToken->IsType(PTokenType::Sym) && nextToken->Cast<Dern::SymToken>()->Value == "||")
+            {
+                int memRightOr = 0;
+                int startRight = startIndexLeft + 2;
+                int endRight = startRight;
+                while (static_cast<size_t>(endRight) < v.size())
+                {
+                    auto rightOr = v.at(endRight);
+                    if (rightOr->IsType(PTokenType::Sym))
+                    {
+                        auto sym = rightOr->Cast<Dern::SymToken>()->Value;
+                        if (sym == "(") ++memRightOr;
+                        else if (sym == ")")
+                        {
+                            if (memRightOr == 0)
+                            {
+                                --endRight;
+                                DEBUG_LOG("Found or end right " << endRight);
+                                break;
+                            }
+
+                            --memRightOr;
+                        }
+
+                        if (memRightOr == 0)
+                        {
+                            if (sym == "||")
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (static_cast<size_t>(++endRight) >= v.size())
+                    {
+                        if (memRightOr > 0) throw "Unexpected end of parse section";
+
+                        endRight = v.size();
+                        break;
+                    }
+                }
+
+                DEBUG_LOG("A" << depth);
+                LOG_VECTOR_TOKEN(v);
+                std::vector<Ref<ParseToken>> v2(v.begin() + startRight, v.begin() + endRight);
+                DEBUG_LOG("B" << depth);
+                LOG_VECTOR_TOKEN(v2);
+                v2 = ComputeLogicalValue(v2);
+                DEBUG_LOG("C" << depth);
+                LOG_VECTOR_TOKEN(v2);
+                std::vector<Ref<ParseToken>> leftVec2(v.begin() + startIndexLeft, v.begin() + startIndexLeft + 1);
+                DEBUG_LOG("D" << depth);
+                LOG_VECTOR_TOKEN(leftVec2);
+
+                auto ref = Ref<LogicalToken>::Create("||", leftVec2, v2);
+                v.erase(v.begin() + startIndexLeft + 1, v.begin() + endRight);
+                v[startIndexLeft] = ref;
+
+                DEBUG_LOG("E" << depth);
+                LOG_VECTOR_TOKEN(v);
+            }
+        }
+ 
+        DEBUG_LOG("End Logical Search");
+
+        return v;
+    }
+
+    Ref<ParseToken> TypeParser::EvaluateLogicalValue(const LogicalToken* token)
+    {
+        if (token->Value == "||")
+        {
+            DEBUG_LOG("Eval || Left");
+            LOG_VECTOR_TOKEN(token->Left);
+            Ref<ParseToken> val1 = nullptr;
+            int sizeLeft = token->Left.size();
+            if (sizeLeft > 1)
+            {
+                DEBUG_LOG("Eval || Left >");
+                val1 = ComputeValue(token->Left);
+            }
+            else
+            {
+                DEBUG_LOG("Eval || Left =");
+                auto token1 = token->Left.at(0);
+                if (token1->IsType(PTokenType::Logic))
+                {
+                    DEBUG_LOG("Eval || Left Logic");
+                    val1 = EvaluateLogicalValue(token1->Cast<LogicalToken>());
+                }
+                else if (ValidMDASToken(token1))
+                {
+                    DEBUG_LOG("Eval || Left MDAS");
+                    val1 = Ref<NumberToken>::Create(GetMDASValue(token1, m_Sys->GetRegistry()));
+                }
+                else
+                    throw "Unexpected logic left side";
+            }
+
+            if (val1 == nullptr || !val1->IsType(PTokenType::Int))
+                throw "Unexpected logic left result";
+            int val1int = val1->Cast<NumberToken>()->Value;
+
+            if (val1int != 0)
+            {
+                DEBUG_LOG("Eval || Left Result 1");
+                return Ref<NumberToken>::Create(1);
+            }
+            else
+            {
+                Ref<ParseToken> val2 = nullptr;
+                int size = token->Right.size();
+                if (size > 1)
+                {
+                    DEBUG_LOG("Eval || Right >");
+                    val2 = ComputeValue(token->Right);
+                }
+                else
+                {
+                    DEBUG_LOG("Eval || Right =");
+                    auto token2 = token->Right.at(0);
+                    if (token2->IsType(PTokenType::Logic))
+                    {
+                        DEBUG_LOG("Eval || Right Logic");
+                        val2 = EvaluateLogicalValue(token2->Cast<LogicalToken>());
+                    }
+                    else if (ValidMDASToken(token2))
+                    {
+                        DEBUG_LOG("Eval || Right MDAS");
+                        val2 = Ref<NumberToken>::Create(GetMDASValue(token2, m_Sys->GetRegistry()));
+                    }
+                    else
+                        throw "Unexpected logic right side";
+                }
+
+                if (val2 == nullptr) throw "Unexpected logic right result";
+
+                if (!val2->IsType(PTokenType::Int))
+                    throw "Unexpected logic right result";
+
+                int val2int = val2->Cast<NumberToken>()->Value;
+                DEBUG_LOG("Eval || Right Result " << (val2int != 0));
+                return Ref<NumberToken>::Create(val2int != 0 ? 1 : 0);
+            }
+        }
+        else if (token->Value == "&&")
+        {
+            DEBUG_LOG("Eval && Left");
+            LOG_VECTOR_TOKEN(token->Left);
+            Ref<ParseToken> val1 = nullptr;
+            int sizeLeft = token->Left.size();
+            if (sizeLeft > 1)
+            {
+                DEBUG_LOG("Eval && Left >");
+                val1 = ComputeValue(token->Left);
+            }
+            else
+            {
+                DEBUG_LOG("Eval && Left =");
+                auto token1 = token->Left.at(0);
+                if (token1->IsType(PTokenType::Logic))
+                {
+                    DEBUG_LOG("Eval && Left Logic");
+                    val1 = EvaluateLogicalValue(token1->Cast<LogicalToken>());
+                }
+                else if (ValidMDASToken(token1))
+                {
+                    DEBUG_LOG("Eval && Left MDAS");
+                    val1 = Ref<NumberToken>::Create(GetMDASValue(token1, m_Sys->GetRegistry()));
+                }
+                else
+                    throw "Unexpected logic left side";
+            }
+
+            if (val1 == nullptr || !val1->IsType(PTokenType::Int))
+                throw "Unexpected logic left result";
+            int val1int = val1->Cast<NumberToken>()->Value;
+
+            if (val1int == 0)
+            {
+                DEBUG_LOG("Eval && Left Result 0");
+                return Ref<NumberToken>::Create(0);
+            }
+            else
+            {
+                Ref<ParseToken> val2 = nullptr;
+                int size = token->Right.size();
+                if (size > 1)
+                {
+                    DEBUG_LOG("Eval && Right >");
+                    val2 = ComputeValue(token->Right);
+                }
+                else
+                {
+                    DEBUG_LOG("Eval && Right =");
+                    auto token2 = token->Right.at(0);
+                    if (token2->IsType(PTokenType::Logic))
+                    {
+                        DEBUG_LOG("Eval && Right Logic");
+                        val2 = EvaluateLogicalValue(token2->Cast<LogicalToken>());
+                    }
+                    else if (ValidMDASToken(token2))
+                    {
+                        DEBUG_LOG("Eval && Right MDAS");
+                        val2 = Ref<NumberToken>::Create(GetMDASValue(token2, m_Sys->GetRegistry()));
+                    }
+                    else
+                        throw "Unexpected logic right side";
+                }
+
+                if (val2 == nullptr || !val2->IsType(PTokenType::Int))
+                    throw "Unexpected logic right ressult";
+
+                int val2int = val2->Cast<NumberToken>()->Value;
+                DEBUG_LOG("Eval && Right Result " << (val2int != 0));
+                return Ref<NumberToken>::Create(val2int != 0 ? 1 : 0);
+            }
+        }
+
+        throw "Unexpected logic result state";
     }
 }

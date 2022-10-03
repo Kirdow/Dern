@@ -30,4 +30,13 @@ namespace Dern::RefUtil
         std::scoped_lock lock(s_RefSetMutex);
         return s_RefSet.size();
     }
+
+    void ValidateReferences()
+    {
+        int refcount = Dern::RefUtil::CountReferences();
+        if (refcount > 0)
+        {
+            std::cout << "References still counted: " << refcount << "\n";
+        }
+    }
 }

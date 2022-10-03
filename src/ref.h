@@ -8,6 +8,7 @@ namespace Dern
         void RemoveReference(void* ref);
         bool CheckReference(void* ref);
         int CountReferences();
+        void ValidateReferences();
     }
 
     template<typename T>

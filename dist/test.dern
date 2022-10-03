@@ -1,32 +1,20 @@
-var x = 5;
-var y = 7;
+var counter = 0;
 
-print("x: " + x);
-print("y: " + y);
-
-print("If Statement");
-if (x * true) {
-    print("(x * true) true");
-} else {
-    print("(x * true) false");
+func addCount() -> $number {
+    counter = counter + 1;
+    return counter;
 }
 
-print("Variable assignment");
-var state = x < 7 * false;
-print("state: " + state);
+func loop($number: i) -> $void {
+    if (i <= 0) {
+        return;
+    }
 
-print("Arithmetic operations");
-print("!(5 * (y >= x) && 0) * false: " + (!(5 * (y >= x) && 0) * false));
-
-print("Parameter input");
-func printIf($number: cond, $text: str) -> $void {
-    if (cond == 1) {
-        print(str);
+    loop(i - 1);
+    if (i % 2 || (addCount() && i % 5 == 4)) {
+        print("Added on " + i);
     }
 }
 
-printIf(!(x == 4) * true, "!(x == 4) * true");
-printIf(!(x == 5) * true, "!(x == 5) * true");
-printIf(!(x == 6) * true, "!(x == 6) * true");
-
-print("5 * 5 != false: " + (5 * 5 != false));
+loop(10);
+print("Counter: " + counter);

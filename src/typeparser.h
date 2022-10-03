@@ -46,6 +46,8 @@ namespace Dern
         Ref<StoredValue> ComputeValue(std::function<Ref<Token>(ParseMem&)> nextFn);
     private:
         Ref<ParseToken> ComputeValue(std::vector<Ref<ParseToken>> v);
+        Ref<ParseToken> EvaluateLogicalValue(const LogicalToken* token);
+        std::vector<Ref<ParseToken>> ComputeLogicalValue(std::vector<Ref<ParseToken>> v, int depth = 0);
     private:
         int m_Count;
         WeakRef<LSystem> m_Sys;

@@ -64,11 +64,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	int refcount = Dern::RefUtil::CountReferences();
-	if (refcount > 0)
-	{
-		std::cout << "References still counted: " << refcount << "\n";
-	}
+	Dern::RefUtil::ValidateReferences();
 
 	return 0;
 }

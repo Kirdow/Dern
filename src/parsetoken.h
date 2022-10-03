@@ -8,7 +8,7 @@ namespace Dern
 {
     enum class PTokenType
     {
-        Int, Text, Sym, Var, None
+        Int, Text, Sym, Var, None, Logic
     };
 
     struct ParseToken
@@ -49,6 +49,18 @@ namespace Dern
 
         TextToken(const std::string& val) : ParseToken(PTokenType::Text), Value(val) {}
     };
+
+    struct LogicalToken : public ParseToken
+    {
+        std::string Value;
+        std::vector<Ref<ParseToken>> Left;
+        std::vector<Ref<ParseToken>> Right;
+
+        LogicalToken(const std::string& val, const std::vector<Ref<ParseToken>>& left, const std::vector<Ref<ParseToken>>& right)
+            : ParseToken(PTokenType::Logic), Value(val), Left(left), Right(right) {}
+
+        void Clear();
+    };
 }
 
 inline std::ostream& operator<<(std::ostream& ostr, const Dern::ParseToken& token)
@@ -72,6 +84,26 @@ inline std::ostream& operator<<(std::ostream& ostr, const Dern::ParseToken& toke
     else if (token.IsType(Dern::PTokenType::None))
     {
         ostr << "PNone";
+    }
+    else if (token.IsType(Dern::PTokenType::Logic))
+    {
+        ostr << "PLogic[{";
+        auto ltoken = token.Cast<Dern::LogicalToken>();
+        for (size_t i = 0; i < ltoken->Left.size(); i++)
+        {
+            if (i > 0) ostr << ",";
+            ostr << *(ltoken->Left.at(i));
+        }
+
+        ostr << "}" << ltoken->Value << "{";
+
+        for (size_t i = 0; i < ltoken->Right.size(); i++)
+        {
+            if (i > 0) ostr << ",";
+            ostr << *(ltoken->Right.at(i));
+        }
+
+        ostr << "}]";
     }
 
     return ostr;
