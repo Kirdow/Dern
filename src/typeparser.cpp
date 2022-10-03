@@ -125,11 +125,11 @@ namespace Dern
 #ifdef ENABLE_DEBUG_LOG
     static void LogVectorToken(const std::vector<Ref<ParseToken>>& tokens)
     {
-        std::cout << "LOGICAL OP !!!!!!\n";
+        DEBUG_LOG("LOGICAL OP !!!!!!\n");
         int i = 0;
         for (auto entry : tokens)
         {
-            std::cout << (i++) << ": " << *entry << "\n";
+            DEBUG_LOG((i++) << ": " << *entry);
         }
     }
 

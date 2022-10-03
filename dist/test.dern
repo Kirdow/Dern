@@ -1,5 +1,16 @@
-var age = 12;
+func loop($number: index, $number: end, $text: str) -> $void {
+    if (index == end) {
+        return;
+    }
 
-if (age >= 18) {
-    print("You're an adult");
+    var step = 1;
+    if (index > end) {
+        step = 0 - step;
+    }
+
+    print(str + ": " + index);
+    loop(index + step, end, str);
 }
+
+loop(1, 6, "Ascend");
+loop(5, 0, "Descend");
