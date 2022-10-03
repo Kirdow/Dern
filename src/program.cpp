@@ -318,6 +318,9 @@ namespace Dern
                             }
                         } while (true);
 
+                        // Poll EOF
+                        m_Data->PollEOF(GetIndex());
+
                         tokenStack[4] = GetToken();
                         DEBUG_READ(tokenStack[4]);
                         if (!tokenStack[4]->IsType(TokenType::Keyword) || !tokenStack[4]->IsValue("else"))

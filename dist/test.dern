@@ -1,20 +1,5 @@
-var counter = 0;
+var age = 12;
 
-func addCount() -> $number {
-    counter = counter + 1;
-    return counter;
+if (age >= 18) {
+    print("You're an adult");
 }
-
-func loop($number: i) -> $void {
-    if (i <= 0) {
-        return;
-    }
-
-    loop(i - 1);
-    if (i % 2 || (addCount() && i % 5 == 4)) {
-        print("Added on " + i);
-    }
-}
-
-loop(10);
-print("Counter: " + counter);
