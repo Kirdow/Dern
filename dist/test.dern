@@ -5,7 +5,7 @@ func loop($number: index, $number: end, $text: str) -> $void {
 
     var step = 1;
     if (index > end) {
-        step = 0 - step;
+        step = -step;
     }
 
     print(str + ": " + index);

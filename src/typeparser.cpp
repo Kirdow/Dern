@@ -137,6 +137,7 @@ namespace Dern
 #else
     #define LOG_VECTOR_TOKEN(v)
 #endif
+
     Ref<ParseToken> TypeParser::ComputeValue(std::vector<Ref<ParseToken>> v)
     {
         if (v.size() == 0)
@@ -451,11 +452,11 @@ namespace Dern
         {
             tmp = v;
 
-            for (size_t i = 1; i + 1 < v.size(); i += 2)
+            for (size_t i = 1; i + 1 < v.size(); ++i)
             {
                 auto token = v.at(i);
                 if (!token->IsType(PTokenType::Sym))
-                    throw "Unexpected token";
+                    continue;
 
                 auto sym = token->Cast<SymToken>()->Value;
                 if (sym == "*" || sym == "/" || sym == "%")
@@ -504,17 +505,42 @@ namespace Dern
         {
             tmp = v;
 
-            for (size_t i = 1; i + 1 < v.size(); i += 2)
+            for (size_t i = 0; i + 1 < v.size(); ++i)
             {
                 auto token = v.at(i);
                 if (!token->IsType(PTokenType::Sym))
-                    throw "Unexpected token";
+                    continue;
 
                 auto sym = token->Cast<SymToken>()->Value;
                 if (sym == "+" || sym == "-")
                 {
-                    auto left = v.at(i - 1);
                     auto right = v.at(i + 1);
+                    if (i == 0)
+                    {
+                        if (!ValidMDASToken(right))
+                            throw "Unexpected token type";
+                        
+                        int data = GetMDASValue(right, m_Sys->GetRegistry());
+                        if (sym == "-") data = -data;
+
+                        v.erase(v.begin() + i + 1, v.begin() + i + 2);
+                        v[i] = Ref<NumberToken>::Create(data);
+                        break;
+                    }
+
+                    auto left = v.at(i - 1);
+
+                    if (right->IsType(PTokenType::Sym) && right->Cast<SymToken>()->Value == "-")
+                    {
+                        if (i + 2 >= v.size()) throw "Unexpected end";
+                        auto rightTwo = v.at(i + 2);
+                        if (!ValidMDASToken(rightTwo))
+                            throw "Unexpected token type";
+                        int data = GetMDASValue(rightTwo, m_Sys->GetRegistry());
+                        v.erase(v.begin() + i + 2, v.begin() + i + 3);
+                        v[i + 1] = Ref<NumberToken>::Create(-data);
+                        break;
+                    }
 
                     bool leftValidForText = (left->IsType(PTokenType::Text) || (left->IsType(PTokenType::Var) && m_Sys->GetRegistry()->HasEntry<std::string>(left->Cast<VarToken>()->Value)));
                     bool rightValidForText = (right->IsType(PTokenType::Text) || (right->IsType(PTokenType::Var) && m_Sys->GetRegistry()->HasEntry<std::string>(right->Cast<VarToken>()->Value)));
