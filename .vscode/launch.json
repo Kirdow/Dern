@@ -15,7 +15,9 @@
                 "program": "${workspaceFolder}/dist/dernapp",
                 "args": [
                     "test.dern"
-                ]
+                ],
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
             },
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\dist",
@@ -36,7 +38,9 @@
                 "program": "${workspaceFolder}/dist/dernapp",
                 "args": [
                     "test.dern"
-                ]
+                ],
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
             },
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\dist",
