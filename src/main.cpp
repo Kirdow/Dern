@@ -1,8 +1,11 @@
 #include "program.h"
 #include "cmd.h"
 #include "cmdruns.h"
+#include "strutil.h"
 
 char* s_AppName = nullptr;
+
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -18,8 +21,8 @@ int main(int argc, char** argv)
 	// App Name
 	{
 		std::string arg = argv[0];
-		if (arg.rfind("/") != std::string::npos)
-			arg = arg.substr(arg.rfind("/") + 1);
+		if (arg.rfind(StrUtil::GetDirectorySeparator()) != std::string::npos)
+			arg = arg.substr(arg.rfind(StrUtil::GetDirectorySeparator()) + 1);
 
 		if (arg.length() > 23)
 		{

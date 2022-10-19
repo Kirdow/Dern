@@ -4,5 +4,9 @@ obj*/
 *.o
 
 # Binary files
+## Linux
 dist/dernapp
+## Windows
+dist/dernapp.exe
+
 

@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src/",
+                "C:\\msys64\\mingw64\\include\\**"
+            ],
+            "forcedInclude": [
+                "${workspaceFolder}/src/pch.h"
+            ],
+            "intelliSenseMode": "${default}",
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\g++",
+            "browse": {
+                "path": [
+                    "C:\\msys64\\mingw64\\include\\**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "compilerArgs": [],
+            "mergeConfigurations": false,
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

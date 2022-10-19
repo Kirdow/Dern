@@ -12,6 +12,8 @@ namespace StrUtil
 	bool StartsWith(const std::string& str, const std::string& needle);
 	bool EndsWith(const std::string& str, const std::string& needle);
 
+	const std::string& GetDirectorySeparator();
+
 	namespace Self
 	{
 		inline static void LTrim(std::string& s)

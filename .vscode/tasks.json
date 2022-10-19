@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "windows": {
+                "command": "msys2_shell",
+                "args": [
+                    "-here",
+                    "-defterm",
+                    "-no-start",
+                    "-where",
+                    "%cd%",
+                    "-mingw64",
+                    "-c",
+                    "make distclean; make clean; make all || read -p 'Press any key to exit...' -n1 -s"
+                ]
+            },
+            "linux": {
+                "command": "make distclean; make clean; make all || read -p 'Press any key to exit...' -n1 -s",
+                "args": []
+            }
+        }
+    ],
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    }
+}

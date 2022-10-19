@@ -1,6 +1,17 @@
 
 namespace StrUtil
 {
+	static bool s_InitSep = false;
+	static std::string s_DirSep;
+	const std::string& GetDirectorySeparator()
+	{
+		if (s_InitSep) return s_DirSep;
+
+		s_DirSep = std::string(1, (char)std::filesystem::path::preferred_separator);
+		s_InitSep = true;
+		return s_DirSep;
+	}	
+
 	bool Contains(const std::string_view& haystack, const std::string_view& needle)
 	{
 		return haystack.find(needle) != std::string_view::npos;

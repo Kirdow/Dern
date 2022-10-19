@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run DernApp",
+            "type": "cppdbg",
+            "request": "launch",
+            "windows": {
+                "program": "${workspaceFolder}\\dist\\dernapp.exe",
+                "args": [
+                    "test.dern"
+                ]
+            },
+            "linux": {
+                "program": "${workspaceFolder}/dist/dernapp",
+                "args": [
+                    "test.dern"
+                ]
+            },
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\dist",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
+            "name": "Build & Run DernApp",
+            "type": "cppdbg",
+            "request": "launch",
+            "windows": {
+                "program": "${workspaceFolder}\\dist\\dernapp.exe",
+                "args": [
+                    "test.dern"
+                ]
+            },
+            "linux": {
+                "program": "${workspaceFolder}/dist/dernapp",
+                "args": [
+                    "test.dern"
+                ]
+            },
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\dist",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "build"
+        }
+    ]
+}
